@@ -1,0 +1,50 @@
+recalculateHealthJob:
+  handler: src/handlers/jobs/recalculateHealth.execute
+  description: Recalcula saúde dos veículos e cria alertas dos marcos vencidos
+  timeout: 900
+  memorySize: 1024
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource: !GetAtt NotificationsQueue.Arn
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource: arn:aws:ssm:${self:provider.region}:*:parameter/health_car/*
+  events:
+    - schedule:
+        rate: cron(0 9 * * ? *)
+        description: 06:00 America/Fortaleza
+
+sendNotificationsJob:
+  handler: src/handlers/jobs/sendNotifications.execute
+  description: Agrega alertas por veículo e envia um push por dia
+  timeout: 180
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource: arn:aws:ssm:${self:provider.region}:*:parameter/health_car/*
+  events:
+    - sqs:
+        arn: !GetAtt NotificationsQueue.Arn
+        batchSize: 10
+
+odometerReminderJob:
+  handler: src/handlers/jobs/odometerReminder.execute
+  description: Lembra o dono de atualizar o odômetro parado há mais de 45 dias
+  timeout: 900
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource: !GetAtt NotificationsQueue.Arn
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource: arn:aws:ssm:${self:provider.region}:*:parameter/health_car/*
+  events:
+    - schedule:
+        rate: cron(0 12 ? * MON *)
+        description: Segunda-feira 09:00 America/Fortaleza

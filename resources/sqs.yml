@@ -1,0 +1,16 @@
+Resources:
+  NotificationsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ${self:custom.notificationsQueue}
+      VisibilityTimeout: 180
+      MessageRetentionPeriod: 345600
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt NotificationsDeadLetterQueue.Arn
+        maxReceiveCount: 3
+
+  NotificationsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ${self:custom.notificationsQueue}-dlq
+      MessageRetentionPeriod: 1209600

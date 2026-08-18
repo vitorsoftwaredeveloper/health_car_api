@@ -1,0 +1,32 @@
+service: health-car-api
+frameworkVersion: "3"
+configValidationMode: error
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+package:
+  individually: true
+
+custom:
+  config: ${file(config/local.json)}
+  esbuild: ${file(esbuild.config.js)}
+  serverless-offline:
+    httpPort: 4000
+    lambdaPort: 4002
+    noPrependStageInUrl: true
+
+provider:
+  name: aws
+  runtime: nodejs24.x
+  stage: local
+  region: ${self:custom.config.environment.REGION}
+  memorySize: 512
+  timeout: 29
+  environment: ${self:custom.config.environment}
+  httpApi:
+    cors: true
+
+functions:
+  - ${file(src/handlers/system/functions.yml)}

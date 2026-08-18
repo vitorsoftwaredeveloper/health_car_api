@@ -1,0 +1,7 @@
+status:
+  handler: src/handlers/system/status.execute
+  description: Verificação de disponibilidade da API
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/status

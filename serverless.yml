@@ -1,0 +1,79 @@
+service: health-car-api
+frameworkVersion: "3"
+configValidationMode: error
+
+plugins:
+  - serverless-esbuild
+  - serverless-iam-roles-per-function
+  - serverless-prune-plugin
+  - serverless-offline
+
+package:
+  individually: true
+
+custom:
+  config: ${file(config/${sls:stage}.json)}
+  esbuild: ${file(esbuild.config.js)}
+  prune:
+    automatic: true
+    number: 3
+  attachmentsBucket: ${self:service}-${sls:stage}-attachments
+  notificationsQueue: ${self:service}-${sls:stage}-notifications
+
+provider:
+  name: aws
+  runtime: nodejs24.x
+  stage: ${opt:stage, 'dev'}
+  region: ${self:custom.config.environment.REGION}
+  memorySize: 512
+  timeout: 29
+  logRetentionInDays: 30
+  versionFunctions: false
+  architecture: arm64
+  environment:
+    NODE_OPTIONS: --enable-source-maps
+    STAGE: ${sls:stage}
+    SERVICE: ${self:custom.config.environment.SERVICE}
+    REGION: ${self:custom.config.environment.REGION}
+    DB: ${self:custom.config.environment.DB}
+    ENCRYPTION_KEY: ${self:custom.config.environment.ENCRYPTION_KEY}
+    USER_POOL_ID: ${self:custom.config.environment.USER_POOL_ID}
+    CLIENT_ID: ${self:custom.config.environment.CLIENT_ID}
+    COGNITO_URL: ${self:custom.config.environment.COGNITO_URL}
+    FRONTEND_URL: ${self:custom.config.environment.FRONTEND_URL}
+    VAPID_PUBLIC_KEY: ${self:custom.config.environment.VAPID_PUBLIC_KEY}
+    VAPID_PRIVATE_KEY: ${self:custom.config.environment.VAPID_PRIVATE_KEY}
+    VAPID_SUBJECT: ${self:custom.config.environment.VAPID_SUBJECT}
+    ATTACHMENTS_BUCKET: ${self:custom.attachmentsBucket}
+    NOTIFICATIONS_QUEUE_URL: !Ref NotificationsQueue
+  httpApi:
+    cors:
+      allowedOrigins:
+        - ${self:custom.config.environment.FRONTEND_URL}
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      maxAge: 600
+    authorizers:
+      cognitoJwt:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: ${self:custom.config.environment.COGNITO_URL}
+        audience:
+          - ${self:custom.config.environment.CLIENT_ID}
+
+functions:
+  - ${file(src/handlers/system/functions.yml)}
+  - ${file(src/handlers/jobs/functions.yml)}
+
+resources:
+  - ${file(resources/s3.yml)}
+  - ${file(resources/sqs.yml)}
+  - ${file(resources/httpApi.yml)}
