@@ -13,6 +13,16 @@ jest.mock("../../src/repositories/vehicle.repository", () => ({
 jest.mock("../../src/repositories/account.repository", () => ({
   accountRepository: { findById: jest.fn() },
 }));
+jest.mock("../../src/libs/mongo", () => ({
+  withTransaction: jest.fn((operation: any) => operation({ id: "session" })),
+}));
+jest.mock("../../src/services/plan/plan.service", () => ({
+  applyTemplateToVehicle: jest.fn(async () => ({
+    templateName: "Genérico",
+    created: 20,
+    skipped: 27,
+  })),
+}));
 jest.mock("../../src/libs/crypto", () => ({
   encrypt: jest.fn(async (value: string) => `ENC:${value}`),
   decrypt: jest.fn(async (value: string) => value.replace("ENC:", "")),
@@ -20,6 +30,7 @@ jest.mock("../../src/libs/crypto", () => ({
 }));
 
 import { vehicleRepository } from "../../src/repositories/vehicle.repository";
+import { applyTemplateToVehicle } from "../../src/services/plan/plan.service";
 import { accountRepository } from "../../src/repositories/account.repository";
 import { assertVehicleAccess } from "../../src/services/vehicles/access.service";
 import {
@@ -105,6 +116,22 @@ describe("createVehicle", () => {
     expect(document.kmPerDay).toBe(33);
     expect(view.plate).toBe("BRA2E19");
     expect(view.healthScore).toBe(100);
+  });
+
+  it("aplica o template na mesma transação", async () => {
+    const view = await createVehicle(owner, validPayload);
+
+    const [vehicleArg, sessionArg] = (applyTemplateToVehicle as jest.Mock).mock.calls[0];
+    expect(vehicleArg.plate).toBe("ENC:BRA2E19");
+    expect(sessionArg).toEqual({ id: "session" });
+    expect(view.plan).toEqual({ templateName: "Genérico", created: 20, skipped: 27 });
+  });
+
+  it("respeita applyTemplate false", async () => {
+    const view = await createVehicle(owner, { ...validPayload, applyTemplate: false });
+
+    expect(applyTemplateToVehicle).not.toHaveBeenCalled();
+    expect(view.plan).toEqual({ templateName: null, created: 0, skipped: 0 });
   });
 
   it("aceita placa no padrão antigo", async () => {

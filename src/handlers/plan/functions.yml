@@ -1,0 +1,29 @@
+getPlan:
+  handler: src/handlers/plan/getPlan.execute
+  description: Itens do plano de manutenção do veículo
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/plan
+        authorizer:
+          name: cognitoJwt
+
+applyPlanTemplate:
+  handler: src/handlers/plan/applyTemplate.execute
+  description: Reaplica o template sem sobrescrever item existente
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/plan/apply-template
+        authorizer:
+          name: cognitoJwt
+
+addPlanItem:
+  handler: src/handlers/plan/addPlanItem.execute
+  description: Adiciona item do catálogo ao plano
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/plan/items
+        authorizer:
+          name: cognitoJwt

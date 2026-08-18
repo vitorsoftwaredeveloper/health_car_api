@@ -53,6 +53,10 @@ export function createInstanceMongoose<T>(
       await db();
       return await mongooseModel.deleteOne(filter, { ...options });
     },
+    insertMany: async (data: any[], options?: any) => {
+      await db();
+      return await mongooseModel.insertMany(data, { ...options });
+    },
     count: async (filter: any, options?: any) => {
       await db();
       return await mongooseModel.countDocuments(filter, { ...options });

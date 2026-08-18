@@ -16,6 +16,8 @@ import {
   httpError,
   STATUS_CODE,
 } from "../../utils/errors";
+import { withTransaction } from "../../libs/mongo";
+import { applyTemplateToVehicle, ApplyTemplateResult } from "../plan/plan.service";
 import { assertVehicleAccess } from "./access.service";
 
 export interface CreateVehiclePayload {
@@ -172,10 +174,14 @@ export const getVehicle = async (
 ): Promise<VehicleView> =>
   toVehicleView(await assertVehicleAccess(requester, vehicleId, "read"));
 
+export interface CreatedVehicleView extends VehicleView {
+  plan: ApplyTemplateResult;
+}
+
 export const createVehicle = async (
   requester: Requester,
   payload: CreateVehiclePayload,
-): Promise<VehicleView> => {
+): Promise<CreatedVehicleView> => {
   await assertVehicleLimit(requester);
 
   const plate = assertValidPlate(payload.plate);
@@ -209,9 +215,22 @@ export const createVehicle = async (
     status: "active" as VehicleStatus,
   };
 
+  const shouldApplyTemplate = payload.applyTemplate !== false;
+
   try {
-    const created = await vehicleRepository.insertOne(document);
-    return toVehicleView(created.toObject() as VehicleDocument);
+    const { vehicle, plan } = await withTransaction(async (session) => {
+      const created = await vehicleRepository.insertOne(document, { session });
+      const persisted = created.toObject() as VehicleDocument;
+
+      return {
+        vehicle: persisted,
+        plan: shouldApplyTemplate
+          ? await applyTemplateToVehicle(persisted, session)
+          : { templateName: null, created: 0, skipped: 0 },
+      };
+    });
+
+    return { ...(await toVehicleView(vehicle)), plan };
   } catch (error: any) {
     if (error?.code === DUPLICATE_KEY_ERROR_CODE) throw duplicatePlate();
     throw error;

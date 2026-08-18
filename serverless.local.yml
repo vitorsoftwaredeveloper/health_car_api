@@ -41,3 +41,4 @@ functions:
   - ${file(src/handlers/users/functions.yml)}
   - ${file(src/handlers/vehicles/functions.yml)}
   - ${file(src/handlers/catalog/functions.yml)}
+  - ${file(src/handlers/plan/functions.yml)}

@@ -13,7 +13,9 @@
     "test": "jest --coverage",
     "typecheck": "tsc --noEmit",
     "migrate": "ts-node --compiler-options '{\"module\":\"CommonJS\"}'",
-    "seed:catalog": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seeds/catalogItems.seed.ts"
+    "seed:catalog": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seeds/catalogItems.seed.ts",
+    "seed:templates": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seeds/planTemplates.seed.ts",
+    "seed": "npm run seed:catalog && npm run seed:templates"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.159",
