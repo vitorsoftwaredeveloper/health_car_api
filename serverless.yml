@@ -30,6 +30,13 @@ provider:
   logRetentionInDays: 30
   versionFunctions: false
   architecture: arm64
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource: arn:aws:ssm:${self:provider.region}:*:parameter/health_car/*
   environment:
     NODE_OPTIONS: --enable-source-maps
     STAGE: ${sls:stage}
@@ -71,6 +78,7 @@ provider:
 
 functions:
   - ${file(src/handlers/system/functions.yml)}
+  - ${file(src/handlers/users/functions.yml)}
   - ${file(src/handlers/jobs/functions.yml)}
 
 resources:

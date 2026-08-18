@@ -1,0 +1,39 @@
+getMe:
+  handler: src/handlers/users/getMe.execute
+  description: Perfil, conta e preferências do requisitante
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/me
+        authorizer:
+          name: cognitoJwt
+
+updateMe:
+  handler: src/handlers/users/updateMe.execute
+  description: Atualiza nome, telefone e tema
+  events:
+    - httpApi:
+        method: PATCH
+        path: /v1/me
+        authorizer:
+          name: cognitoJwt
+
+updateMyPreferences:
+  handler: src/handlers/users/updatePreferences.execute
+  description: Atualiza marcos de aviso, push e quiet hours
+  events:
+    - httpApi:
+        method: PATCH
+        path: /v1/me/preferences
+        authorizer:
+          name: cognitoJwt
+
+acceptLgpdConsent:
+  handler: src/handlers/users/lgpdConsent.execute
+  description: Registra consentimento LGPD
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/me/lgpd-consent
+        authorizer:
+          name: cognitoJwt

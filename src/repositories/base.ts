@@ -34,6 +34,14 @@ export function createInstanceMongoose<T>(
         lean: true,
       });
     },
+    findOneAndUpdate: async (filter: any, data: any, options?: any) => {
+      await db();
+      return await mongooseModel.findOneAndUpdate(filter, data, {
+        new: true,
+        lean: true,
+        ...options,
+      });
+    },
     findById: async (id: any, projection?: any, options?: any) => {
       await db();
       return await mongooseModel.findById(id, projection, {

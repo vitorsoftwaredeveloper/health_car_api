@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { ClientSession } from "mongoose";
 import { getSsmParameter } from "./ssm";
 
 let connection: typeof mongoose | null = null;
@@ -48,5 +48,22 @@ export const db = async (): Promise<typeof mongoose | undefined> => {
   } catch (err) {
     console.log("connection database error", err);
     throw err;
+  }
+};
+
+export const withTransaction = async <T>(
+  operation: (session: ClientSession) => Promise<T>,
+): Promise<T> => {
+  const conn = await db();
+  const session = await (conn as typeof mongoose).startSession();
+
+  try {
+    let result: T | undefined;
+    await session.withTransaction(async () => {
+      result = await operation(session);
+    });
+    return result as T;
+  } finally {
+    await session.endSession();
   }
 };

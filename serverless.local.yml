@@ -16,6 +16,7 @@ custom:
     httpPort: 4000
     lambdaPort: 4002
     noPrependStageInUrl: true
+    noAuth: true
 
 provider:
   name: aws
@@ -27,6 +28,14 @@ provider:
   environment: ${self:custom.config.environment}
   httpApi:
     cors: true
+    authorizers:
+      cognitoJwt:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_local
+        audience:
+          - local-client-id
 
 functions:
   - ${file(src/handlers/system/functions.yml)}
+  - ${file(src/handlers/users/functions.yml)}
