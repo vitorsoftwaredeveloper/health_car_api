@@ -1,0 +1,39 @@
+listAlerts:
+  handler: src/handlers/alerts/listAlerts.execute
+  description: Caixa de pendências da conta
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/alerts
+        authorizer:
+          name: cognitoJwt
+
+readAlert:
+  handler: src/handlers/alerts/readAlert.execute
+  description: Marca o alerta como lido
+  events:
+    - httpApi:
+        method: PATCH
+        path: /v1/alerts/{alertId}/read
+        authorizer:
+          name: cognitoJwt
+
+snoozeAlert:
+  handler: src/handlers/alerts/snoozeAlert.execute
+  description: Adia o alerta por dias ou por quilometragem
+  events:
+    - httpApi:
+        method: PATCH
+        path: /v1/alerts/{alertId}/snooze
+        authorizer:
+          name: cognitoJwt
+
+dismissAlert:
+  handler: src/handlers/alerts/dismissAlert.execute
+  description: Descarta o aviso mantendo o item vencido
+  events:
+    - httpApi:
+        method: PATCH
+        path: /v1/alerts/{alertId}/dismiss
+        authorizer:
+          name: cognitoJwt
