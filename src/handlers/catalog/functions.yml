@@ -1,0 +1,29 @@
+listCatalogItems:
+  handler: src/handlers/catalog/listCatalogItems.execute
+  description: Catálogo global de itens de manutenção
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/catalog-items
+        authorizer:
+          name: cognitoJwt
+
+createCatalogItem:
+  handler: src/handlers/catalog/createCatalogItem.execute
+  description: Cria item de catálogo
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/catalog-items
+        authorizer:
+          name: cognitoJwt
+
+updateCatalogItem:
+  handler: src/handlers/catalog/updateCatalogItem.execute
+  description: Atualiza item de catálogo
+  events:
+    - httpApi:
+        method: PUT
+        path: /v1/catalog-items/{catalogItemId}
+        authorizer:
+          name: cognitoJwt
