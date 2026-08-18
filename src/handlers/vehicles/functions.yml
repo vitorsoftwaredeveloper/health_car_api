@@ -1,0 +1,49 @@
+createVehicle:
+  handler: src/handlers/vehicles/createVehicle.execute
+  description: Cria veículo respeitando o limite da conta
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles
+        authorizer:
+          name: cognitoJwt
+
+listVehicles:
+  handler: src/handlers/vehicles/listVehicles.execute
+  description: Veículos da conta e os que o requisitante conduz
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles
+        authorizer:
+          name: cognitoJwt
+
+getVehicle:
+  handler: src/handlers/vehicles/getVehicle.execute
+  description: Ficha completa do veículo
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}
+        authorizer:
+          name: cognitoJwt
+
+updateVehicle:
+  handler: src/handlers/vehicles/updateVehicle.execute
+  description: Atualiza a ficha do veículo
+  events:
+    - httpApi:
+        method: PUT
+        path: /v1/vehicles/{vehicleId}
+        authorizer:
+          name: cognitoJwt
+
+deleteVehicle:
+  handler: src/handlers/vehicles/deleteVehicle.execute
+  description: Remove o veículo da conta
+  events:
+    - httpApi:
+        method: DELETE
+        path: /v1/vehicles/{vehicleId}
+        authorizer:
+          name: cognitoJwt

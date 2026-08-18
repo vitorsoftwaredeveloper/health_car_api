@@ -79,6 +79,7 @@ provider:
 functions:
   - ${file(src/handlers/system/functions.yml)}
   - ${file(src/handlers/users/functions.yml)}
+  - ${file(src/handlers/vehicles/functions.yml)}
   - ${file(src/handlers/jobs/functions.yml)}
 
 resources:

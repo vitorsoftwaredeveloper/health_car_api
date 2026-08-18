@@ -3,6 +3,7 @@ import { mergePreferences, PreferencesPatch } from "../../domain/preferences";
 import { accountRepository } from "../../repositories/account.repository";
 import { userRepository } from "../../repositories/user.repository";
 import { AccountDocument, Requester, Theme, UserDocument, UserPreferences } from "../../types/user";
+import { listVehicles, VehicleView } from "../vehicles/vehicle.service";
 import { httpError, STATUS_CODE } from "../../utils/errors";
 
 export interface UpdateMePayload {
@@ -33,6 +34,7 @@ export interface MeView {
     vehicleLimit: number;
     isOwner: boolean;
   };
+  vehicles: VehicleView[];
 }
 
 const loadAccount = async (
@@ -56,6 +58,7 @@ const loadAccount = async (
 const toView = async (
   user: UserDocument,
   account: AccountDocument,
+  vehicles: VehicleView[],
 ): Promise<MeView> => ({
   user: {
     id: String(user._id),
@@ -74,6 +77,7 @@ const toView = async (
     vehicleLimit: account.vehicleLimit,
     isOwner: String(account.ownerId) === String(user._id),
   },
+  vehicles,
 });
 
 const applyUpdate = async (
@@ -93,11 +97,19 @@ const applyUpdate = async (
     );
   }
 
-  return toView(updated, await loadAccount(requester));
+  return toView(
+    updated,
+    await loadAccount(requester),
+    await listVehicles({ ...requester, user: updated }),
+  );
 };
 
 export const getMe = async (requester: Requester): Promise<MeView> =>
-  toView(requester.user, await loadAccount(requester));
+  toView(
+    requester.user,
+    await loadAccount(requester),
+    await listVehicles(requester),
+  );
 
 export const updateMe = async (
   requester: Requester,

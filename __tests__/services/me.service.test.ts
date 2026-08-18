@@ -6,6 +6,9 @@ jest.mock("../../src/repositories/user.repository", () => ({
 jest.mock("../../src/repositories/account.repository", () => ({
   accountRepository: { findById: jest.fn() },
 }));
+jest.mock("../../src/services/vehicles/vehicle.service", () => ({
+  listVehicles: jest.fn(async () => []),
+}));
 jest.mock("../../src/libs/crypto", () => ({
   encrypt: jest.fn(async (value: string) => `ENC:${value}`),
   decrypt: jest.fn(async (value: string) => value.replace("ENC:", "")),
