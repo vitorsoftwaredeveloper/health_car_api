@@ -9,6 +9,7 @@ import { PlanItemDocument } from "../../types/plan-item";
 import { PlanTemplateDocument, PlanTemplateItem } from "../../types/plan-template";
 import { Requester } from "../../types/user";
 import { VehicleDocument } from "../../types/vehicle";
+import { parseLocalDate } from "../../utils/date";
 import { httpError, STATUS_CODE } from "../../utils/errors";
 import { assertVehicleAccess } from "../vehicles/access.service";
 
@@ -244,7 +245,7 @@ export const addCatalogItemToPlan = async (
     customized,
     lastServiceKm: payload.lastServiceKm ?? null,
     lastServiceDate: payload.lastServiceDate
-      ? new Date(payload.lastServiceDate)
+      ? parseLocalDate(payload.lastServiceDate)
       : null,
   });
 

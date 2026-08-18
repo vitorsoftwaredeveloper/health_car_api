@@ -17,6 +17,21 @@ export const startOfLocalDay = (reference: Date = new Date()): Date => {
 
 export const today = (): Date => startOfLocalDay();
 
+const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+export const parseLocalDate = (value: string): Date => {
+  const dateOnly = DATE_ONLY_PATTERN.exec(value);
+
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    return new Date(
+      Date.UTC(Number(year), Number(month) - 1, Number(day), BRAZIL_OFFSET_HOURS),
+    );
+  }
+
+  return startOfLocalDay(new Date(value));
+};
+
 export const daysBetween = (to: Date, from: Date): number =>
   Math.round(
     (startOfLocalDay(to).getTime() - startOfLocalDay(from).getTime()) /

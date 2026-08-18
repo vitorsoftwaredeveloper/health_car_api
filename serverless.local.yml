@@ -42,3 +42,4 @@ functions:
   - ${file(src/handlers/vehicles/functions.yml)}
   - ${file(src/handlers/catalog/functions.yml)}
   - ${file(src/handlers/plan/functions.yml)}
+  - ${file(src/handlers/odometer/functions.yml)}

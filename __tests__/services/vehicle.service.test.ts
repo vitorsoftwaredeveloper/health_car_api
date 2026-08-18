@@ -13,6 +13,9 @@ jest.mock("../../src/repositories/vehicle.repository", () => ({
 jest.mock("../../src/repositories/account.repository", () => ({
   accountRepository: { findById: jest.fn() },
 }));
+jest.mock("../../src/repositories/odometerReading.repository", () => ({
+  odometerReadingRepository: { insertOne: jest.fn() },
+}));
 jest.mock("../../src/libs/mongo", () => ({
   withTransaction: jest.fn((operation: any) => operation({ id: "session" })),
 }));
@@ -31,6 +34,7 @@ jest.mock("../../src/libs/crypto", () => ({
 
 import { vehicleRepository } from "../../src/repositories/vehicle.repository";
 import { applyTemplateToVehicle } from "../../src/services/plan/plan.service";
+import { odometerReadingRepository } from "../../src/repositories/odometerReading.repository";
 import { accountRepository } from "../../src/repositories/account.repository";
 import { assertVehicleAccess } from "../../src/services/vehicles/access.service";
 import {
@@ -116,6 +120,16 @@ describe("createVehicle", () => {
     expect(document.kmPerDay).toBe(33);
     expect(view.plate).toBe("BRA2E19");
     expect(view.healthScore).toBe(100);
+  });
+
+  it("grava a leitura inicial do odômetro na mesma transação", async () => {
+    await createVehicle(owner, validPayload);
+
+    const [reading, options] = (odometerReadingRepository.insertOne as jest.Mock).mock.calls[0];
+    expect(reading.km).toBe(77140);
+    expect(reading.source).toBe("manual");
+    expect(reading.createdBy).toBe(userId);
+    expect(options).toEqual({ session: { id: "session" } });
   });
 
   it("aplica o template na mesma transação", async () => {

@@ -1,0 +1,29 @@
+createOdometerReading:
+  handler: src/handlers/odometer/createReading.execute
+  description: Registra leitura e recalcula o veículo na hora
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/odometer
+        authorizer:
+          name: cognitoJwt
+
+listOdometerReadings:
+  handler: src/handlers/odometer/listReadings.execute
+  description: Série de leituras paginada
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/odometer
+        authorizer:
+          name: cognitoJwt
+
+correctOdometerReading:
+  handler: src/handlers/odometer/correctReading.execute
+  description: Corrige leitura preservando a original
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/odometer/{readingId}/correct
+        authorizer:
+          name: cognitoJwt

@@ -17,6 +17,8 @@ import {
   STATUS_CODE,
 } from "../../utils/errors";
 import { withTransaction } from "../../libs/mongo";
+import { parseLocalDate, today } from "../../utils/date";
+import { odometerReadingRepository } from "../../repositories/odometerReading.repository";
 import { applyTemplateToVehicle, ApplyTemplateResult } from "../plan/plan.service";
 import { assertVehicleAccess } from "./access.service";
 
@@ -205,8 +207,8 @@ export const createVehicle = async (
     color: payload.color ?? null,
     currentOdometer: payload.currentOdometer,
     currentOdometerAt: payload.currentOdometerAt
-      ? new Date(payload.currentOdometerAt)
-      : new Date(),
+      ? parseLocalDate(payload.currentOdometerAt)
+      : today(),
     kmPerDay: KM_PER_DAY_FALLBACK,
     healthScore: 100,
     drivers: [
@@ -221,6 +223,18 @@ export const createVehicle = async (
     const { vehicle, plan } = await withTransaction(async (session) => {
       const created = await vehicleRepository.insertOne(document, { session });
       const persisted = created.toObject() as VehicleDocument;
+
+      await odometerReadingRepository.insertOne(
+        {
+          accountId: persisted.accountId,
+          vehicleId: persisted._id,
+          km: persisted.currentOdometer,
+          date: persisted.currentOdometerAt,
+          source: "manual",
+          createdBy: requester.userId,
+        },
+        { session },
+      );
 
       return {
         vehicle: persisted,

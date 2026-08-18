@@ -30,6 +30,7 @@ import {
 import { CatalogItemDocument } from "../../src/types/catalog";
 import { Requester } from "../../src/types/user";
 import { VehicleDocument } from "../../src/types/vehicle";
+import { parseLocalDate } from "../../src/utils/date";
 
 const accountId = new Types.ObjectId();
 const vehicleId = new Types.ObjectId();
@@ -232,7 +233,8 @@ describe("addCatalogItemToPlan", () => {
     });
 
     expect(view.lastServiceKm).toBe(62000);
-    expect(view.lastServiceDate).toEqual(new Date("2025-05-09"));
+    expect(view.lastServiceDate).toEqual(parseLocalDate("2025-05-09"));
+    expect(view.lastServiceDate?.toISOString()).toBe("2025-05-09T03:00:00.000Z");
   });
 
   it("recusa código inexistente", async () => {
