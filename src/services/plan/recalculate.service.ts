@@ -34,6 +34,11 @@ export interface StatusSummary {
   unknown: number;
 }
 
+export interface PlanItemEvaluation {
+  item: PlanItemDocument;
+  result: DueResult;
+}
+
 export interface RecalculationResult {
   vehicleId: string;
   kmPerDay: number;
@@ -45,6 +50,7 @@ export interface RecalculationResult {
   healthScore: number;
   summary: StatusSummary;
   items: PlanItemDocument[];
+  evaluations: PlanItemEvaluation[];
   changedItems: ItemStatusChange[];
 }
 
@@ -97,11 +103,17 @@ export const recalculateVehicle = async (
 
   const context = { today: now, estimatedOdometer, kmPerDay };
   const changedItems: ItemStatusChange[] = [];
+  const evaluations: PlanItemEvaluation[] = [];
   const operations = [];
 
   for (const item of items) {
     const result = computeItemStatus(item, context);
     const previousStatus = item.status;
+    const isStale =
+      previousStatus !== result.status ||
+      item.dueDate?.getTime() !== result.dueDate?.getTime() ||
+      item.nextDueKm !== result.nextDueKm ||
+      item.calculatedAt.getTime() !== now.getTime();
 
     if (previousStatus !== result.status) {
       changedItems.push({
@@ -121,6 +133,9 @@ export const recalculateVehicle = async (
     item.nextDueKm = result.nextDueKm;
     item.nextDueDate = result.nextDueDate;
     item.calculatedAt = now;
+    evaluations.push({ item, result });
+
+    if (!isStale) continue;
 
     operations.push({
       updateOne: {
@@ -149,18 +164,26 @@ export const recalculateVehicle = async (
   const healthScore = computeHealthScore(items, context);
   const daysSinceReading = daysBetween(now, reportedOdometerAt);
 
-  await vehicleRepository.updateOne(
-    { _id: vehicle._id },
-    {
-      $set: {
-        kmPerDay,
-        healthScore,
-        currentOdometer: reportedOdometer,
-        currentOdometerAt: reportedOdometerAt,
+  const vehicleChanged =
+    vehicle.kmPerDay !== kmPerDay ||
+    vehicle.healthScore !== healthScore ||
+    vehicle.currentOdometer !== reportedOdometer ||
+    vehicle.currentOdometerAt.getTime() !== reportedOdometerAt.getTime();
+
+  if (vehicleChanged) {
+    await vehicleRepository.updateOne(
+      { _id: vehicle._id },
+      {
+        $set: {
+          kmPerDay,
+          healthScore,
+          currentOdometer: reportedOdometer,
+          currentOdometerAt: reportedOdometerAt,
+        },
       },
-    },
-    session ? { session } : undefined,
-  );
+      session ? { session } : undefined,
+    );
+  }
 
   return {
     vehicleId: String(vehicle._id),
@@ -173,6 +196,7 @@ export const recalculateVehicle = async (
     healthScore,
     summary: summarize(items),
     items,
+    evaluations,
     changedItems,
   };
 };

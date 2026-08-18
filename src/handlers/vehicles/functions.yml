@@ -28,6 +28,16 @@ getVehicle:
         authorizer:
           name: cognitoJwt
 
+getVehicleHealth:
+  handler: src/handlers/vehicles/getVehicleHealth.execute
+  description: Painel consolidado de saúde do veículo
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/health
+        authorizer:
+          name: cognitoJwt
+
 updateVehicle:
   handler: src/handlers/vehicles/updateVehicle.execute
   description: Atualiza a ficha do veículo

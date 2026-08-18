@@ -159,12 +159,47 @@ describe("recalculateVehicle", () => {
 
   it("repassa a sessão da transação para as duas escritas", async () => {
     const session = { id: "session" } as any;
-    (planItemRepository.find as jest.Mock).mockResolvedValue([planItem()]);
+    (odometerReadingRepository.find as jest.Mock).mockResolvedValue([
+      { km: 78000, date: addDays(today(), -10) },
+      { km: 74000, date: addDays(today(), -50) },
+    ]);
+    (planItemRepository.find as jest.Mock).mockResolvedValue([
+      planItem({ lastServiceKm: 69000, lastServiceDate: addDays(today(), -20) }),
+    ]);
 
     await recalculateVehicle(vehicle, session);
 
     expect((planItemRepository.bulkWrite as jest.Mock).mock.calls[0][1]).toEqual({ session });
     expect((vehicleRepository.updateOne as jest.Mock).mock.calls[0][2]).toEqual({ session });
+  });
+
+  it("não reescreve item nem veículo quando nada mudou", async () => {
+    const settled = planItem({
+      status: "unknown",
+      calculatedAt: today(),
+      dueDate: null,
+      nextDueKm: null,
+    });
+    (planItemRepository.find as jest.Mock).mockResolvedValue([settled]);
+
+    await recalculateVehicle(vehicle);
+
+    expect(planItemRepository.bulkWrite).not.toHaveBeenCalled();
+    expect(vehicleRepository.updateOne).not.toHaveBeenCalled();
+  });
+
+  it("devolve a avaliação de cada item para quem precisa da folga", async () => {
+    (planItemRepository.find as jest.Mock).mockResolvedValue([
+      planItem({ lastServiceKm: 69000, lastServiceDate: addDays(today(), -20) }),
+    ]);
+
+    const result = await recalculateVehicle(vehicle);
+
+    expect(result.evaluations).toHaveLength(1);
+    expect(result.evaluations[0].result.kmRemaining).toBe(
+      79000 - result.estimatedOdometer,
+    );
+    expect(result.evaluations[0].item.status).toBe(result.evaluations[0].result.status);
   });
 
   it("ignora item desativado no resumo", async () => {
