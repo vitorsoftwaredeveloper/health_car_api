@@ -1,0 +1,16 @@
+{
+  "environment": {
+    "DB": "mongodb://localhost:27017/health_car?replicaSet=rs0",
+    "SERVICE": "health_car_api",
+    "REGION": "us-east-1",
+    "COGNITO_URL": "${ssm:/health_car/cognito_url}",
+    "CLIENT_ID": "${ssm:/health_car/client_id}",
+    "USER_POOL_ID": "${ssm:/health_car/user_pool_id}",
+    "COGNITO_USER_POOL_ARN": "${ssm:/health_car/cognito_user_pool_arn}",
+    "FRONTEND_URL": "http://localhost:3000",
+    "ENCRYPTION_KEY": "/health_car/encryption_key",
+    "VAPID_PUBLIC_KEY": "/health_car/vapid_public_key",
+    "VAPID_PRIVATE_KEY": "/health_car/vapid_private_key",
+    "VAPID_SUBJECT": "mailto:contato@healthcar.app"
+  }
+}

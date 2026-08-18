@@ -1,0 +1,14 @@
+services:
+  mongo:
+    image: mongo:6.0-jammy
+    container_name: health_car_mongo_local
+    # replicaSet é obrigatório: a baixa de manutenção roda em transação.
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

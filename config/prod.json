@@ -1,0 +1,16 @@
+{
+  "environment": {
+    "DB": "/health_car/prod/db",
+    "SERVICE": "health_car_api",
+    "REGION": "us-east-1",
+    "COGNITO_URL": "${ssm:/health_car/prod/cognito_url}",
+    "CLIENT_ID": "${ssm:/health_car/prod/client_id}",
+    "USER_POOL_ID": "${ssm:/health_car/prod/user_pool_id}",
+    "COGNITO_USER_POOL_ARN": "${ssm:/health_car/prod/cognito_user_pool_arn}",
+    "FRONTEND_URL": "https://healthcar.app",
+    "ENCRYPTION_KEY": "/health_car/prod/encryption_key",
+    "VAPID_PUBLIC_KEY": "/health_car/prod/vapid_public_key",
+    "VAPID_PRIVATE_KEY": "/health_car/prod/vapid_private_key",
+    "VAPID_SUBJECT": "mailto:contato@healthcar.app"
+  }
+}

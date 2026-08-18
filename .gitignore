@@ -1,0 +1,24 @@
+# dependências
+node_modules/
+
+# build / deploy
+.serverless/
+.esbuild/
+dist/
+.build/
+
+# ambiente
+.env
+.env.local
+.env.*.local
+
+# testes
+coverage/
+
+# sistema
+.DS_Store
+*.log
+
+# skills e doc vêm do diretório compartilhado (../.agents, ../docs)
+.agents
+skills-lock.json

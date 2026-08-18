@@ -1,0 +1,16 @@
+{
+  "environment": {
+    "DB": "/health_car/staging/db",
+    "SERVICE": "health_car_api",
+    "REGION": "us-east-1",
+    "COGNITO_URL": "${ssm:/health_car/staging/cognito_url}",
+    "CLIENT_ID": "${ssm:/health_car/staging/client_id}",
+    "USER_POOL_ID": "${ssm:/health_car/staging/user_pool_id}",
+    "COGNITO_USER_POOL_ARN": "${ssm:/health_car/staging/cognito_user_pool_arn}",
+    "FRONTEND_URL": "https://staging.healthcar.app",
+    "ENCRYPTION_KEY": "/health_car/staging/encryption_key",
+    "VAPID_PUBLIC_KEY": "/health_car/staging/vapid_public_key",
+    "VAPID_PRIVATE_KEY": "/health_car/staging/vapid_private_key",
+    "VAPID_SUBJECT": "mailto:contato@healthcar.app"
+  }
+}
