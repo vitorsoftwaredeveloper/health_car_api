@@ -77,6 +77,7 @@ export const recalculateVehicle = async (
   const readings = (await odometerReadingRepository.find({ vehicleId: vehicle._id }, null, {
     sort: { date: -1 },
     limit: READING_WINDOW_SIZE,
+    ...(session ? { session } : {}),
   })) as OdometerReadingDocument[];
 
   const kmPerDay = computeKmPerDay(readings, now);
@@ -97,9 +98,11 @@ export const recalculateVehicle = async (
     now,
   );
 
-  const items = (await planItemRepository.find({
-    vehicleId: vehicle._id,
-  })) as PlanItemDocument[];
+  const items = (await planItemRepository.find(
+    { vehicleId: vehicle._id },
+    null,
+    session ? { session } : undefined,
+  )) as PlanItemDocument[];
 
   const context = { today: now, estimatedOdometer, kmPerDay };
   const changedItems: ItemStatusChange[] = [];

@@ -1,0 +1,39 @@
+registerMaintenanceService:
+  handler: src/handlers/maintenance/registerService.execute
+  description: Registra serviço, dá baixa nos itens e fecha alertas
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/services
+        authorizer:
+          name: cognitoJwt
+
+listMaintenanceServices:
+  handler: src/handlers/maintenance/listServices.execute
+  description: Linha do tempo de manutenção
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/services
+        authorizer:
+          name: cognitoJwt
+
+getMaintenanceService:
+  handler: src/handlers/maintenance/getService.execute
+  description: Detalhe do serviço com URL assinada dos anexos
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/services/{eventId}
+        authorizer:
+          name: cognitoJwt
+
+createAttachmentUpload:
+  handler: src/handlers/maintenance/createAttachment.execute
+  description: URL pré-assinada para enviar a nota
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/attachments
+        authorizer:
+          name: cognitoJwt

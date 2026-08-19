@@ -37,3 +37,13 @@ dismissAlert:
         path: /v1/alerts/{alertId}/dismiss
         authorizer:
           name: cognitoJwt
+
+resolveAlert:
+  handler: src/handlers/alerts/resolveAlert.execute
+  description: Baixa rápida do "Já fiz" que resolve a pendência
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/alerts/{alertId}/resolve
+        authorizer:
+          name: cognitoJwt

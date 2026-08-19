@@ -49,6 +49,10 @@ export function createInstanceMongoose<T>(
         lean: true,
       });
     },
+    updateMany: async (filter: any, data: any, options?: any) => {
+      await db();
+      return await mongooseModel.updateMany(filter, data, { ...options });
+    },
     deleteOne: async (filter: any, options?: any) => {
       await db();
       return await mongooseModel.deleteOne(filter, { ...options });
