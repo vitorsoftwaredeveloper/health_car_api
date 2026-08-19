@@ -1,0 +1,237 @@
+import { Types } from "mongoose";
+import {
+  buildNotificationContent,
+  decideNotification,
+  NotifiableAlert,
+} from "../../domain/notification";
+import { sendPush } from "../../libs/webpush";
+import { alertRepository } from "../../repositories/alert.repository";
+import { notificationRepository } from "../../repositories/notification.repository";
+import { planItemRepository } from "../../repositories/planItem.repository";
+import { pushDeviceRepository } from "../../repositories/pushDevice.repository";
+import { userRepository } from "../../repositories/user.repository";
+import { vehicleRepository } from "../../repositories/vehicle.repository";
+import { AlertDocument } from "../../types/alert";
+import {
+  NotificationDocument,
+  PushDeviceDocument,
+} from "../../types/notification";
+import { PlanItemDocument } from "../../types/plan-item";
+import { UserDocument } from "../../types/user";
+import { VehicleDocument } from "../../types/vehicle";
+import { today } from "../../utils/date";
+import { defaultPreferences } from "../../domain/preferences";
+
+export interface NotificationJobMessage {
+  accountId: string;
+  vehicleId: string;
+  alertIds: string[];
+}
+
+export interface SendNotificationsResult {
+  received: number;
+  sent: number;
+  skipped: number;
+  failed: number;
+  devicesDeactivated: number;
+}
+
+const localTimeIn = (timezone: string, reference = new Date()): string =>
+  new Intl.DateTimeFormat("pt-BR", {
+    timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(reference);
+
+const loadRecipients = async (
+  vehicle: VehicleDocument,
+): Promise<UserDocument[]> => {
+  const driverIds = vehicle.drivers.map((driver) => driver.userId);
+
+  return (await userRepository.find({
+    $or: [
+      { accountId: vehicle.accountId, role: "owner" },
+      { _id: { $in: driverIds } },
+    ],
+  })) as UserDocument[];
+};
+
+const toNotifiableAlerts = async (
+  alerts: AlertDocument[],
+): Promise<NotifiableAlert[]> => {
+  const planItems = (await planItemRepository.find({
+    _id: { $in: alerts.map((alert) => alert.planItemId) },
+  })) as PlanItemDocument[];
+
+  const nameById = new Map(
+    planItems.map((item) => [String(item._id), item.name]),
+  );
+
+  return alerts.map((alert) => ({
+    id: String(alert._id),
+    milestone: alert.milestone,
+    title: alert.title,
+    message: alert.message,
+    planItemId: String(alert.planItemId),
+    itemName: nameById.get(String(alert.planItemId)) ?? alert.title,
+  }));
+};
+
+const alreadyNotifiedToday = async (
+  vehicleId: Types.ObjectId,
+  userId: Types.ObjectId,
+): Promise<boolean> => {
+  const sent = await notificationRepository.count({
+    vehicleId,
+    userId,
+    status: "sent",
+    createdAt: { $gte: today() },
+  });
+
+  return sent > 0;
+};
+
+const deliver = async (
+  devices: PushDeviceDocument[],
+  payload: unknown,
+): Promise<{ delivered: boolean; deactivated: number; error?: string }> => {
+  let delivered = false;
+  let deactivated = 0;
+  let error: string | undefined;
+
+  for (const device of devices) {
+    const result = await sendPush(
+      { endpoint: device.endpoint, keys: device.keys },
+      payload,
+    );
+
+    if (result.ok) {
+      delivered = true;
+      await pushDeviceRepository.updateOne(
+        { _id: device._id },
+        { $set: { lastSentAt: new Date() } },
+      );
+      continue;
+    }
+
+    error = result.error;
+
+    if (result.gone) {
+      deactivated += 1;
+      await pushDeviceRepository.updateOne(
+        { _id: device._id },
+        { $set: { active: false } },
+      );
+    }
+  }
+
+  return { delivered, deactivated, error };
+};
+
+const processMessage = async (
+  message: NotificationJobMessage,
+  result: SendNotificationsResult,
+): Promise<void> => {
+  if (!Types.ObjectId.isValid(message.vehicleId)) return;
+
+  const vehicle = (await vehicleRepository.findById(
+    new Types.ObjectId(message.vehicleId),
+  )) as VehicleDocument | null;
+
+  if (!vehicle) return;
+
+  const alerts = (await alertRepository.find({
+    _id: { $in: message.alertIds.map((id) => new Types.ObjectId(id)) },
+    status: "pending",
+  })) as AlertDocument[];
+
+  if (!alerts.length) return;
+
+  const notifiable = await toNotifiableAlerts(alerts);
+  const recipients = await loadRecipients(vehicle);
+
+  for (const user of recipients) {
+    const preferences = user.preferences ?? defaultPreferences();
+
+    const devices = (await pushDeviceRepository.find({
+      userId: user._id,
+      active: true,
+    })) as PushDeviceDocument[];
+
+    const decision = decideNotification({
+      preferences,
+      alerts: notifiable,
+      hasActiveDevice: devices.length > 0,
+      alreadyNotifiedToday: await alreadyNotifiedToday(
+        vehicle._id as Types.ObjectId,
+        user._id as Types.ObjectId,
+      ),
+      localTime: localTimeIn(preferences.timezone),
+    });
+
+    const content = buildNotificationContent(
+      vehicle.nickname,
+      String(vehicle._id),
+      decision.alerts,
+    );
+
+    const record = {
+      accountId: vehicle.accountId,
+      userId: user._id,
+      vehicleId: vehicle._id,
+      channel: "push" as const,
+      alertIds: decision.alerts.map((alert) => new Types.ObjectId(alert.id)),
+      ...content,
+    };
+
+    if (decision.skipReason) {
+      await notificationRepository.insertOne({
+        ...record,
+        status: "skipped",
+        skipReason: decision.skipReason,
+      } as NotificationDocument);
+      result.skipped += 1;
+      continue;
+    }
+
+    const delivery = await deliver(devices, {
+      ...content,
+      vehicleId: String(vehicle._id),
+    });
+    result.devicesDeactivated += delivery.deactivated;
+
+    await notificationRepository.insertOne({
+      ...record,
+      status: delivery.delivered ? "sent" : "failed",
+      sentAt: delivery.delivered ? new Date() : null,
+      error: delivery.delivered ? null : (delivery.error ?? "push falhou"),
+    } as NotificationDocument);
+
+    if (delivery.delivered) result.sent += 1;
+    else result.failed += 1;
+  }
+};
+
+export const runSendNotifications = async (
+  records: { body: string }[],
+): Promise<SendNotificationsResult> => {
+  const result: SendNotificationsResult = {
+    received: records.length,
+    sent: 0,
+    skipped: 0,
+    failed: 0,
+    devicesDeactivated: 0,
+  };
+
+  for (const record of records) {
+    try {
+      await processMessage(JSON.parse(record.body), result);
+    } catch (error: any) {
+      result.failed += 1;
+      console.error("notification message failed", { message: error?.message });
+    }
+  }
+
+  return result;
+};

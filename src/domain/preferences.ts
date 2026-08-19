@@ -13,7 +13,7 @@ export const MILESTONES: Milestone[] = ["D30", "D7", "D0", "OVERDUE_WEEKLY"];
 export const defaultPreferences = (): UserPreferences => ({
   pushEnabled: true,
   milestones: { D30: true, D7: true, D0: true, OVERDUE_WEEKLY: true },
-  quietHours: { start: "22:00", end: "07:00" },
+  quietHours: { start: "22:00", end: "06:00" },
   timezone: DEFAULT_TIMEZONE,
   theme: "system",
 });

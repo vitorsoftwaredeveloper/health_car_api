@@ -15,7 +15,7 @@ describe("defaultPreferences", () => {
     expect(preferences.pushEnabled).toBe(true);
     expect(preferences.timezone).toBe(DEFAULT_TIMEZONE);
     expect(preferences.theme).toBe("system");
-    expect(preferences.quietHours).toEqual({ start: "22:00", end: "07:00" });
+    expect(preferences.quietHours).toEqual({ start: "22:00", end: "06:00" });
     MILESTONES.forEach((milestone) => {
       expect(isMilestoneEnabled(preferences, milestone)).toBe(true);
     });

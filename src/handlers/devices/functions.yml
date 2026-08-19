@@ -1,0 +1,19 @@
+registerPushDevice:
+  handler: src/handlers/devices/registerDevice.execute
+  description: Inscreve o dispositivo no Web Push
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/devices
+        authorizer:
+          name: cognitoJwt
+
+removePushDevice:
+  handler: src/handlers/devices/removeDevice.execute
+  description: Cancela a inscrição do dispositivo
+  events:
+    - httpApi:
+        method: DELETE
+        path: /v1/devices/{deviceId}
+        authorizer:
+          name: cognitoJwt

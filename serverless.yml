@@ -85,6 +85,7 @@ functions:
   - ${file(src/handlers/odometer/functions.yml)}
   - ${file(src/handlers/alerts/functions.yml)}
   - ${file(src/handlers/maintenance/functions.yml)}
+  - ${file(src/handlers/devices/functions.yml)}
   - ${file(src/handlers/jobs/functions.yml)}
 
 resources:
