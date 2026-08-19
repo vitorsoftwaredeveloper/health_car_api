@@ -240,7 +240,7 @@ describe("registerMaintenanceEvent", () => {
 
     const [, update] = (attachmentRepository.updateMany as jest.Mock).mock.calls[0];
     expect(update.$set.link).toEqual({
-      collection: "maintenanceEvents",
+      collectionName: "maintenanceEvents",
       documentId: expect.anything(),
     });
     expect(result.event.attachments[0].fileName).toBe("nota.pdf");

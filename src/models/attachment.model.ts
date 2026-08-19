@@ -17,7 +17,7 @@ export const attachmentSchema = new Schema<AttachmentDocument>(
     link: {
       type: new Schema(
         {
-          collection: { type: String, required: true },
+          collectionName: { type: String, required: true },
           documentId: { type: Schema.Types.ObjectId, required: true },
         },
         { _id: false },

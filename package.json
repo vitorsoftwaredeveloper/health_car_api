@@ -18,7 +18,9 @@
     "seed": "npm run seed:catalog && npm run seed:templates",
     "job:recalculate": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runRecalculateHealth.ts",
     "job:notify": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runSendNotifications.ts",
-    "job:purge": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runPurgeExpired.ts"
+    "job:purge": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runPurgeExpired.ts",
+    "test:integration": "jest --config jest.integration.config.js --runInBand",
+    "test:all": "npm test && npm run test:integration"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.159",

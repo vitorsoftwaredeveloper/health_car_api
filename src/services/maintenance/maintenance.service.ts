@@ -212,7 +212,7 @@ const linkAttachments = async (
 
   await attachmentRepository.updateMany(
     { _id: { $in: objectIds } },
-    { $set: { link: { collection: "maintenanceEvents", documentId: eventId } } },
+    { $set: { link: { collectionName: "maintenanceEvents", documentId: eventId } } },
     { session },
   );
 

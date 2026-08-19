@@ -69,7 +69,7 @@ export interface AttachmentDocument {
   mimeType: string;
   sizeBytes?: number | null;
   type: AttachmentType;
-  link?: { collection: string; documentId: Types.ObjectId } | null;
+  link?: { collectionName: string; documentId: Types.ObjectId } | null;
   uploadedBy: Types.ObjectId;
   purgeAfter?: Date | null;
   createdAt?: Date;

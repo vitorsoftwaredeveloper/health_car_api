@@ -24,8 +24,9 @@
 ```bash
 docker compose up -d     # Mongo com replicaSet (transações)
 npm install
-npm run seed:catalog
+npm run seed             # catálogo (47 itens) + template genérico
 npm run dev              # nodemon + serverless-offline
-npm test
+npm test                 # unitários (domínio 100%, services mockados)
+npm run test:integration # fluxos críticos contra o Mongo do docker
 npm run typecheck
 ```
