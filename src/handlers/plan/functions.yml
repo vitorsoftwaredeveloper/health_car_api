@@ -27,3 +27,43 @@ addPlanItem:
         path: /v1/vehicles/{vehicleId}/plan/items
         authorizer:
           name: cognitoJwt
+
+createCustomPlanItem:
+  handler: src/handlers/plan/createCustomItem.execute
+  description: Cria peça personalizada fora do catálogo
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/plan/custom-items
+        authorizer:
+          name: cognitoJwt
+
+updatePlanItem:
+  handler: src/handlers/plan/updatePlanItem.execute
+  description: Override de intervalo, antecedência e última troca
+  events:
+    - httpApi:
+        method: PUT
+        path: /v1/vehicles/{vehicleId}/plan/items/{planItemId}
+        authorizer:
+          name: cognitoJwt
+
+mutePlanItem:
+  handler: src/handlers/plan/mutePlanItem.execute
+  description: Silencia ou volta a avisar sobre o item
+  events:
+    - httpApi:
+        method: PATCH
+        path: /v1/vehicles/{vehicleId}/plan/items/{planItemId}/mute
+        authorizer:
+          name: cognitoJwt
+
+deactivatePlanItem:
+  handler: src/handlers/plan/deactivatePlanItem.execute
+  description: Desativa o item sem apagar o histórico
+  events:
+    - httpApi:
+        method: DELETE
+        path: /v1/vehicles/{vehicleId}/plan/items/{planItemId}
+        authorizer:
+          name: cognitoJwt
