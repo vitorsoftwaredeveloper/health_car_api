@@ -211,6 +211,67 @@ describe("runSendNotifications", () => {
     expect(result.sent).toBe(2);
   });
 
+  it("entrega o lembrete de odômetro sem olhar os marcos", async () => {
+    (userRepository.find as jest.Mock).mockResolvedValue([
+      {
+        _id: userId,
+        preferences: mergePreferences(defaultPreferences(), {
+          quietHours: null,
+          milestones: { D30: false, D7: false, D0: false, OVERDUE_WEEKLY: false },
+        }),
+      },
+    ]);
+
+    const result = await runSendNotifications([
+      {
+        body: JSON.stringify({
+          accountId: String(accountId),
+          vehicleId: String(vehicleId),
+          kind: "odometer_reminder",
+          daysSinceReading: 52,
+        }),
+      },
+    ]);
+
+    expect(sendPush).toHaveBeenCalledTimes(1);
+    expect(record()).toMatchObject({
+      kind: "odometer_reminder",
+      status: "sent",
+      title: "Meu Civic: quanto está o odômetro?",
+      alertIds: [],
+    });
+    expect(result.sent).toBe(1);
+    expect(alertRepository.find).not.toHaveBeenCalled();
+  });
+
+  it("não repete o lembrete dentro de 15 dias", async () => {
+    (notificationRepository.count as jest.Mock).mockResolvedValue(1);
+
+    const result = await runSendNotifications([
+      {
+        body: JSON.stringify({
+          accountId: String(accountId),
+          vehicleId: String(vehicleId),
+          kind: "odometer_reminder",
+          daysSinceReading: 60,
+        }),
+      },
+    ]);
+
+    expect(sendPush).not.toHaveBeenCalled();
+    expect(record()).toMatchObject({
+      status: "skipped",
+      skipReason: "reminder_recently_sent",
+    });
+    expect(result.skipped).toBe(1);
+  });
+
+  it("marca kind alert na notificação de vencimento", async () => {
+    await runSendNotifications([message()]);
+
+    expect(record().kind).toBe("alert");
+  });
+
   it("conta falha quando a mensagem não é JSON válido", async () => {
     const result = await runSendNotifications([{ body: "não é json" }]);
 

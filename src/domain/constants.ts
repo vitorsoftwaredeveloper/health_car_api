@@ -3,6 +3,7 @@ export const KM_PER_DAY_FALLBACK = 33;
 export const ODOMETER_WINDOW_DAYS = 90;
 
 export const ODOMETER_STALE_DAYS = 45;
+export const ODOMETER_REMINDER_INTERVAL_DAYS = 15;
 export const ODOMETER_AGING_DAYS = 30;
 
 export const DEFAULT_LEAD_TIME_DAYS = 30;

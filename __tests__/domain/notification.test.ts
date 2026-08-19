@@ -1,6 +1,8 @@
 import {
   buildNotificationContent,
+  buildOdometerReminderContent,
   decideNotification,
+  decideOdometerReminder,
   filterAlertsByPreferences,
   NotifiableAlert,
 } from "../../src/domain/notification";
@@ -126,5 +128,61 @@ describe("buildNotificationContent", () => {
 
     expect(content.title).toBe("Meu Civic: 4 itens pedindo atenção");
     expect(content.body).toBe("Fluido de freio e Óleo do motor e mais 2.");
+  });
+});
+
+describe("decideOdometerReminder", () => {
+  const reminderInput = (overrides: any = {}) => ({
+    preferences: defaultPreferences(),
+    hasActiveDevice: true,
+    remindedRecently: false,
+    localTime: "09:00",
+    ...overrides,
+  });
+
+  it("libera o lembrete quando tudo está no lugar", () => {
+    expect(decideOdometerReminder(reminderInput())).toBeNull();
+  });
+
+  it("não insiste dentro do intervalo de 15 dias", () => {
+    expect(decideOdometerReminder(reminderInput({ remindedRecently: true }))).toBe(
+      "reminder_recently_sent",
+    );
+  });
+
+  it("respeita push desligado, ausência de dispositivo e silêncio", () => {
+    expect(
+      decideOdometerReminder(
+        reminderInput({
+          preferences: mergePreferences(defaultPreferences(), { pushEnabled: false }),
+        }),
+      ),
+    ).toBe("push_disabled");
+    expect(decideOdometerReminder(reminderInput({ hasActiveDevice: false }))).toBe(
+      "no_device",
+    );
+    expect(decideOdometerReminder(reminderInput({ localTime: "23:00" }))).toBe(
+      "quiet_hours",
+    );
+  });
+
+  it("ignora os marcos de vencimento, que não valem para lembrete", () => {
+    const preferences = mergePreferences(defaultPreferences(), {
+      milestones: { D30: false, D7: false, D0: false, OVERDUE_WEEKLY: false },
+    });
+
+    expect(decideOdometerReminder(reminderInput({ preferences }))).toBeNull();
+  });
+});
+
+describe("buildOdometerReminderContent", () => {
+  it("diz há quantos dias a leitura está parada e leva para o registro", () => {
+    const content = buildOdometerReminderContent("Meu Civic", "v1", 52);
+
+    expect(content.title).toBe("Meu Civic: quanto está o odômetro?");
+    expect(content.body).toBe(
+      "Faz 52 dias sem leitura. Sem ela, as previsões de troca ficam no chute.",
+    );
+    expect(content.deepLink).toBe("/vehicles/v1?odometer=1");
   });
 });

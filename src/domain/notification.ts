@@ -58,6 +58,36 @@ export const decideNotification = ({
   return { alerts: wanted, skipReason: null };
 };
 
+export interface ReminderDecisionInput {
+  preferences: UserPreferences;
+  hasActiveDevice: boolean;
+  remindedRecently: boolean;
+  localTime: string;
+}
+
+export const decideOdometerReminder = ({
+  preferences,
+  hasActiveDevice,
+  remindedRecently,
+  localTime,
+}: ReminderDecisionInput): NotificationSkipReason | null => {
+  if (!preferences.pushEnabled) return "push_disabled";
+  if (remindedRecently) return "reminder_recently_sent";
+  if (!hasActiveDevice) return "no_device";
+  if (isWithinQuietHours(preferences.quietHours, localTime)) return "quiet_hours";
+  return null;
+};
+
+export const buildOdometerReminderContent = (
+  vehicleNickname: string,
+  vehicleId: string,
+  daysSinceReading: number,
+): NotificationContent => ({
+  title: `${vehicleNickname}: quanto está o odômetro?`,
+  body: `Faz ${daysSinceReading} dias sem leitura. Sem ela, as previsões de troca ficam no chute.`,
+  deepLink: `/vehicles/${vehicleId}?odometer=1`,
+});
+
 export const buildNotificationContent = (
   vehicleNickname: string,
   vehicleId: string,

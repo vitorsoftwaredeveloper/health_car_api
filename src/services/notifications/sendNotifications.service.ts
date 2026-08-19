@@ -1,9 +1,12 @@
 import { Types } from "mongoose";
 import {
   buildNotificationContent,
+  buildOdometerReminderContent,
   decideNotification,
+  decideOdometerReminder,
   NotifiableAlert,
 } from "../../domain/notification";
+import { ODOMETER_REMINDER_INTERVAL_DAYS } from "../../domain/constants";
 import { sendPush } from "../../libs/webpush";
 import { alertRepository } from "../../repositories/alert.repository";
 import { notificationRepository } from "../../repositories/notification.repository";
@@ -19,13 +22,15 @@ import {
 import { PlanItemDocument } from "../../types/plan-item";
 import { UserDocument } from "../../types/user";
 import { VehicleDocument } from "../../types/vehicle";
-import { today } from "../../utils/date";
+import { addDays, today } from "../../utils/date";
 import { defaultPreferences } from "../../domain/preferences";
 
 export interface NotificationJobMessage {
   accountId: string;
   vehicleId: string;
-  alertIds: string[];
+  kind?: "alert" | "odometer_reminder";
+  alertIds?: string[];
+  daysSinceReading?: number;
 }
 
 export interface SendNotificationsResult {
@@ -76,6 +81,23 @@ const toNotifiableAlerts = async (
     planItemId: String(alert.planItemId),
     itemName: nameById.get(String(alert.planItemId)) ?? alert.title,
   }));
+};
+
+const remindedRecently = async (
+  vehicleId: Types.ObjectId,
+  userId: Types.ObjectId,
+): Promise<boolean> => {
+  const since = addDays(today(), -ODOMETER_REMINDER_INTERVAL_DAYS);
+
+  const sent = await notificationRepository.count({
+    vehicleId,
+    userId,
+    kind: "odometer_reminder",
+    status: "sent",
+    createdAt: { $gte: since },
+  });
+
+  return sent > 0;
 };
 
 const alreadyNotifiedToday = async (
@@ -129,6 +151,86 @@ const deliver = async (
   return { delivered, deactivated, error };
 };
 
+const persist = async (
+  record: Record<string, unknown>,
+  devices: PushDeviceDocument[],
+  content: { title: string; body: string; deepLink: string },
+  skipReason: string | null,
+  vehicleId: string,
+  result: SendNotificationsResult,
+): Promise<void> => {
+  if (skipReason) {
+    await notificationRepository.insertOne({
+      ...record,
+      status: "skipped",
+      skipReason,
+    } as unknown as NotificationDocument);
+    result.skipped += 1;
+    return;
+  }
+
+  const delivery = await deliver(devices, { ...content, vehicleId });
+  result.devicesDeactivated += delivery.deactivated;
+
+  await notificationRepository.insertOne({
+    ...record,
+    status: delivery.delivered ? "sent" : "failed",
+    sentAt: delivery.delivered ? new Date() : null,
+    error: delivery.delivered ? null : (delivery.error ?? "push falhou"),
+  } as unknown as NotificationDocument);
+
+  if (delivery.delivered) result.sent += 1;
+  else result.failed += 1;
+};
+
+const processReminder = async (
+  message: NotificationJobMessage,
+  vehicle: VehicleDocument,
+  result: SendNotificationsResult,
+): Promise<void> => {
+  const recipients = await loadRecipients(vehicle);
+  const content = buildOdometerReminderContent(
+    vehicle.nickname,
+    String(vehicle._id),
+    message.daysSinceReading ?? 0,
+  );
+
+  for (const user of recipients) {
+    const preferences = user.preferences ?? defaultPreferences();
+    const devices = (await pushDeviceRepository.find({
+      userId: user._id,
+      active: true,
+    })) as PushDeviceDocument[];
+
+    const skipReason = decideOdometerReminder({
+      preferences,
+      hasActiveDevice: devices.length > 0,
+      remindedRecently: await remindedRecently(
+        vehicle._id as Types.ObjectId,
+        user._id as Types.ObjectId,
+      ),
+      localTime: localTimeIn(preferences.timezone),
+    });
+
+    await persist(
+      {
+        accountId: vehicle.accountId,
+        userId: user._id,
+        vehicleId: vehicle._id,
+        channel: "push" as const,
+        kind: "odometer_reminder" as const,
+        alertIds: [],
+        ...content,
+      },
+      devices,
+      content,
+      skipReason,
+      String(vehicle._id),
+      result,
+    );
+  }
+};
+
 const processMessage = async (
   message: NotificationJobMessage,
   result: SendNotificationsResult,
@@ -141,8 +243,12 @@ const processMessage = async (
 
   if (!vehicle) return;
 
+  if (message.kind === "odometer_reminder") {
+    return processReminder(message, vehicle, result);
+  }
+
   const alerts = (await alertRepository.find({
-    _id: { $in: message.alertIds.map((id) => new Types.ObjectId(id)) },
+    _id: { $in: (message.alertIds ?? []).map((id) => new Types.ObjectId(id)) },
     status: "pending",
   })) as AlertDocument[];
 
@@ -176,40 +282,22 @@ const processMessage = async (
       decision.alerts,
     );
 
-    const record = {
-      accountId: vehicle.accountId,
-      userId: user._id,
-      vehicleId: vehicle._id,
-      channel: "push" as const,
-      alertIds: decision.alerts.map((alert) => new Types.ObjectId(alert.id)),
-      ...content,
-    };
-
-    if (decision.skipReason) {
-      await notificationRepository.insertOne({
-        ...record,
-        status: "skipped",
-        skipReason: decision.skipReason,
-      } as NotificationDocument);
-      result.skipped += 1;
-      continue;
-    }
-
-    const delivery = await deliver(devices, {
-      ...content,
-      vehicleId: String(vehicle._id),
-    });
-    result.devicesDeactivated += delivery.deactivated;
-
-    await notificationRepository.insertOne({
-      ...record,
-      status: delivery.delivered ? "sent" : "failed",
-      sentAt: delivery.delivered ? new Date() : null,
-      error: delivery.delivered ? null : (delivery.error ?? "push falhou"),
-    } as NotificationDocument);
-
-    if (delivery.delivered) result.sent += 1;
-    else result.failed += 1;
+    await persist(
+      {
+        accountId: vehicle.accountId,
+        userId: user._id,
+        vehicleId: vehicle._id,
+        channel: "push" as const,
+        kind: "alert" as const,
+        alertIds: decision.alerts.map((alert) => new Types.ObjectId(alert.id)),
+        ...content,
+      },
+      devices,
+      content,
+      decision.skipReason,
+      String(vehicle._id),
+      result,
+    );
   }
 };
 

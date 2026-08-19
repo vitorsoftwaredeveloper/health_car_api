@@ -16,6 +16,7 @@ import {
 import { createVehicle } from "../../src/services/vehicles/vehicle.service";
 import { createOdometerReading } from "../../src/services/odometer/odometer.service";
 import { runRecalculateHealth } from "../../src/services/jobs/recalculateHealth.service";
+import { runOdometerReminder } from "../../src/services/jobs/odometerReminder.service";
 import { runSendNotifications } from "../../src/services/notifications/sendNotifications.service";
 import { registerDevice } from "../../src/services/notifications/device.service";
 import { updatePreferences } from "../../src/services/users/me.service";
@@ -198,5 +199,74 @@ describe("fluxo 3 — job diário, deduplicação e notificação", () => {
         status: "overdue",
       }),
     ).toBe(1);
+  });
+});
+
+describe("fluxo 4 — lembrete de odômetro parado", () => {
+  beforeEach(async () => {
+    await seedCatalogAndTemplate();
+  });
+
+  const givenStaleVehicle = async (suffix: string, daysSinceReading: number) => {
+    const owner = await givenOwner(suffix);
+    const vehicle = await createVehicle(
+      owner,
+      vehiclePayload({
+        currentOdometerAt: addDays(today(), -daysSinceReading)
+          .toISOString()
+          .slice(0, 10),
+      }),
+    );
+
+    await registerDevice(owner, {
+      endpoint: `https://push.integration/${suffix}`,
+      keys: { p256dh: "chave-publica-de-teste", auth: "chave-auth-teste" },
+      standalone: true,
+    });
+    await updatePreferences(owner, { quietHours: null });
+
+    return { owner, vehicle };
+  };
+
+  it("ignora veículo com leitura recente", async () => {
+    await givenStaleVehicle("fresco", 20);
+
+    const result = await runOdometerReminder();
+
+    expect(result.vehiclesChecked).toBe(0);
+    expect(result.remindersEnqueued).toBe(0);
+  });
+
+  it("lembra quem está parado há mais de 45 dias e não insiste em 15 dias", async () => {
+    const { vehicle } = await givenStaleVehicle("parado", 52);
+
+    const job = await runOdometerReminder();
+    expect(job.vehiclesChecked).toBe(1);
+
+    const message = {
+      body: JSON.stringify({
+        accountId: "irrelevante",
+        vehicleId: vehicle.id,
+        kind: "odometer_reminder",
+        daysSinceReading: 52,
+      }),
+    };
+
+    const first = await runSendNotifications([message]);
+    expect(first.sent).toBe(1);
+    expect(sendPush).toHaveBeenCalledTimes(1);
+    expect(
+      await countIn("notifications", { kind: "odometer_reminder", status: "sent" }),
+    ).toBe(1);
+
+    const second = await runSendNotifications([message]);
+    expect(second.skipped).toBe(1);
+    expect(
+      await countIn("notifications", { skipReason: "reminder_recently_sent" }),
+    ).toBe(1);
+
+    const afterSent = await runOdometerReminder();
+    expect(afterSent.recentlyReminded).toBe(1);
+    expect(afterSent.remindersEnqueued).toBe(0);
   });
 });

@@ -7,6 +7,12 @@ export const notificationSchema = new Schema<NotificationDocument>(
     userId: { type: Schema.Types.ObjectId, ref: "users", required: true },
     vehicleId: { type: Schema.Types.ObjectId, ref: "vehicles", required: true },
     channel: { type: String, enum: ["push"], default: "push", required: true },
+    kind: {
+      type: String,
+      enum: ["alert", "odometer_reminder"],
+      default: "alert",
+      required: true,
+    },
     alertIds: { type: [Schema.Types.ObjectId], default: [] },
     title: { type: String, required: true },
     body: { type: String, required: true },
@@ -27,5 +33,5 @@ export const notificationSchema = new Schema<NotificationDocument>(
   },
 );
 
-notificationSchema.index({ vehicleId: 1, createdAt: -1 });
+notificationSchema.index({ vehicleId: 1, kind: 1, createdAt: -1 });
 notificationSchema.index({ userId: 1, createdAt: -1 });

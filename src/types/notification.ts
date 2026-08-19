@@ -7,7 +7,10 @@ export type NotificationSkipReason =
   | "no_device"
   | "quiet_hours"
   | "push_disabled"
-  | "already_sent_today";
+  | "already_sent_today"
+  | "reminder_recently_sent";
+
+export type NotificationKind = "alert" | "odometer_reminder";
 
 export interface NotificationDocument {
   _id?: Types.ObjectId;
@@ -15,6 +18,7 @@ export interface NotificationDocument {
   userId: Types.ObjectId;
   vehicleId: Types.ObjectId;
   channel: "push";
+  kind: NotificationKind;
   alertIds: Types.ObjectId[];
   title: string;
   body: string;
