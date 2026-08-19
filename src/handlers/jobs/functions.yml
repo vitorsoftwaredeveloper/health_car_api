@@ -48,3 +48,21 @@ odometerReminderJob:
     - schedule:
         rate: cron(0 12 ? * MON *)
         description: Segunda-feira 09:00 America/Fortaleza
+
+purgeExpiredJob:
+  handler: src/handlers/jobs/purgeExpired.execute
+  description: Apaga histórico e anexos de veículo excluído após a carência de 30 dias
+  timeout: 900
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:DeleteObject
+      Resource: arn:aws:s3:::${self:custom.attachmentsBucket}/*
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource: arn:aws:ssm:${self:provider.region}:*:parameter/health_car/*
+  events:
+    - schedule:
+        rate: cron(30 9 * * ? *)
+        description: 06:30 America/Fortaleza

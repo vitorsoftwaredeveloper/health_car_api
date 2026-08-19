@@ -48,6 +48,7 @@ export interface MaintenanceEventDocument {
   attachments: EventAttachment[];
   source: MaintenanceSource;
   createdBy: Types.ObjectId;
+  purgeAfter?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -70,5 +71,6 @@ export interface AttachmentDocument {
   type: AttachmentType;
   link?: { collection: string; documentId: Types.ObjectId } | null;
   uploadedBy: Types.ObjectId;
+  purgeAfter?: Date | null;
   createdAt?: Date;
 }

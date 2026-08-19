@@ -14,7 +14,22 @@ jest.mock("../../src/repositories/account.repository", () => ({
   accountRepository: { findById: jest.fn() },
 }));
 jest.mock("../../src/repositories/odometerReading.repository", () => ({
-  odometerReadingRepository: { insertOne: jest.fn() },
+  odometerReadingRepository: { insertOne: jest.fn(), deleteMany: jest.fn() },
+}));
+jest.mock("../../src/repositories/planItem.repository", () => ({
+  planItemRepository: { deleteMany: jest.fn() },
+}));
+jest.mock("../../src/repositories/alert.repository", () => ({
+  alertRepository: { deleteMany: jest.fn() },
+}));
+jest.mock("../../src/repositories/notification.repository", () => ({
+  notificationRepository: { deleteMany: jest.fn() },
+}));
+jest.mock("../../src/repositories/maintenanceEvent.repository", () => ({
+  maintenanceEventRepository: { updateMany: jest.fn() },
+}));
+jest.mock("../../src/repositories/attachment.repository", () => ({
+  attachmentRepository: { updateMany: jest.fn() },
 }));
 jest.mock("../../src/libs/mongo", () => ({
   withTransaction: jest.fn((operation: any) => operation({ id: "session" })),
@@ -35,6 +50,12 @@ jest.mock("../../src/libs/crypto", () => ({
 import { vehicleRepository } from "../../src/repositories/vehicle.repository";
 import { applyTemplateToVehicle } from "../../src/services/plan/plan.service";
 import { odometerReadingRepository } from "../../src/repositories/odometerReading.repository";
+import { planItemRepository } from "../../src/repositories/planItem.repository";
+import { alertRepository } from "../../src/repositories/alert.repository";
+import { notificationRepository } from "../../src/repositories/notification.repository";
+import { maintenanceEventRepository } from "../../src/repositories/maintenanceEvent.repository";
+import { attachmentRepository } from "../../src/repositories/attachment.repository";
+import { PURGE_GRACE_DAYS } from "../../src/domain/retention";
 import { accountRepository } from "../../src/repositories/account.repository";
 import { assertVehicleAccess } from "../../src/services/vehicles/access.service";
 import {
@@ -330,9 +351,52 @@ describe("updateVehicle", () => {
 });
 
 describe("deleteVehicle", () => {
-  it("remove o veículo do dono", async () => {
+  beforeEach(() => {
+    (planItemRepository.deleteMany as jest.Mock).mockResolvedValue({ deletedCount: 44 });
+    (odometerReadingRepository.deleteMany as jest.Mock).mockResolvedValue({ deletedCount: 7 });
+    (alertRepository.deleteMany as jest.Mock).mockResolvedValue({ deletedCount: 3 });
+    (notificationRepository.deleteMany as jest.Mock).mockResolvedValue({ deletedCount: 2 });
+    (maintenanceEventRepository.updateMany as jest.Mock).mockResolvedValue({ modifiedCount: 5 });
+    (attachmentRepository.updateMany as jest.Mock).mockResolvedValue({ modifiedCount: 4 });
+  });
+
+  it("apaga em cadeia o que só existe dentro do veículo", async () => {
+    const result = await deleteVehicle(owner, String(vehicleId));
+
+    expect(planItemRepository.deleteMany).toHaveBeenCalledWith(
+      { vehicleId },
+      { session: { id: "session" } },
+    );
+    expect(result).toMatchObject({
+      planItemsRemoved: 44,
+      odometerReadingsRemoved: 7,
+      alertsRemoved: 3,
+      notificationsRemoved: 2,
+    });
+    expect(vehicleRepository.deleteOne).toHaveBeenCalledWith(
+      { _id: vehicleId },
+      { session: { id: "session" } },
+    );
+  });
+
+  it("manda histórico e anexos para expurgo com 30 dias de carência", async () => {
+    const result = await deleteVehicle(owner, String(vehicleId));
+
+    const [filter, update] = (maintenanceEventRepository.updateMany as jest.Mock).mock.calls[0];
+    expect(filter).toEqual({ vehicleId });
+    expect(update.$set.purgeAfter).toEqual(result.purgeAfter);
+
+    const days = Math.round(
+      (result.purgeAfter.getTime() - Date.now()) / (24 * 60 * 60 * 1000),
+    );
+    expect(days).toBe(PURGE_GRACE_DAYS);
+    expect(result.eventsScheduledForPurge).toBe(5);
+    expect(result.attachmentsScheduledForPurge).toBe(4);
+  });
+
+  it("não apaga o histórico na hora", async () => {
     await deleteVehicle(owner, String(vehicleId));
 
-    expect(vehicleRepository.deleteOne).toHaveBeenCalledWith({ _id: vehicleId });
+    expect((attachmentRepository as any).deleteMany).toBeUndefined();
   });
 });

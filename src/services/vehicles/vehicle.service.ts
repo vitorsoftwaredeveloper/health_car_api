@@ -19,6 +19,12 @@ import {
 import { withTransaction } from "../../libs/mongo";
 import { parseLocalDate, today } from "../../utils/date";
 import { odometerReadingRepository } from "../../repositories/odometerReading.repository";
+import { alertRepository } from "../../repositories/alert.repository";
+import { attachmentRepository } from "../../repositories/attachment.repository";
+import { maintenanceEventRepository } from "../../repositories/maintenanceEvent.repository";
+import { notificationRepository } from "../../repositories/notification.repository";
+import { planItemRepository } from "../../repositories/planItem.repository";
+import { purgeDateFrom } from "../../domain/retention";
 import { applyTemplateToVehicle, ApplyTemplateResult } from "../plan/plan.service";
 import { assertVehicleAccess } from "./access.service";
 
@@ -299,10 +305,54 @@ export const updateVehicle = async (
   }
 };
 
+export interface DeleteVehicleResult {
+  planItemsRemoved: number;
+  odometerReadingsRemoved: number;
+  alertsRemoved: number;
+  notificationsRemoved: number;
+  eventsScheduledForPurge: number;
+  attachmentsScheduledForPurge: number;
+  purgeAfter: Date;
+}
+
 export const deleteVehicle = async (
   requester: Requester,
   vehicleId: string,
-): Promise<void> => {
+): Promise<DeleteVehicleResult> => {
   const vehicle = await assertVehicleAccess(requester, vehicleId, "manage");
-  await vehicleRepository.deleteOne({ _id: vehicle._id });
+  const purgeAfter = purgeDateFrom(new Date());
+
+  return withTransaction(async (session) => {
+    const scope = { vehicleId: vehicle._id };
+
+    const planItems = await planItemRepository.deleteMany(scope, { session });
+    const readings = await odometerReadingRepository.deleteMany(scope, { session });
+    const alerts = await alertRepository.deleteMany(scope, { session });
+    const notifications = await notificationRepository.deleteMany(scope, {
+      session,
+    });
+
+    const events = await maintenanceEventRepository.updateMany(
+      scope,
+      { $set: { purgeAfter } },
+      { session },
+    );
+    const attachments = await attachmentRepository.updateMany(
+      scope,
+      { $set: { purgeAfter } },
+      { session },
+    );
+
+    await vehicleRepository.deleteOne({ _id: vehicle._id }, { session });
+
+    return {
+      planItemsRemoved: planItems.deletedCount ?? 0,
+      odometerReadingsRemoved: readings.deletedCount ?? 0,
+      alertsRemoved: alerts.deletedCount ?? 0,
+      notificationsRemoved: notifications.deletedCount ?? 0,
+      eventsScheduledForPurge: events.modifiedCount ?? 0,
+      attachmentsScheduledForPurge: attachments.modifiedCount ?? 0,
+      purgeAfter,
+    };
+  });
 };

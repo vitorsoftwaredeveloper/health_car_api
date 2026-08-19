@@ -69,6 +69,7 @@ export const maintenanceEventSchema = new Schema<MaintenanceEventDocument>(
       required: true,
     },
     createdBy: { type: Schema.Types.ObjectId, ref: "users", required: true },
+    purgeAfter: { type: Date, default: null },
   },
   { timestamps: true, collection: "maintenanceEvents" },
 );
@@ -76,3 +77,4 @@ export const maintenanceEventSchema = new Schema<MaintenanceEventDocument>(
 maintenanceEventSchema.index({ vehicleId: 1, date: -1 });
 maintenanceEventSchema.index({ vehicleId: 1, "items.planItemId": 1 });
 maintenanceEventSchema.index({ accountId: 1, date: -1 });
+maintenanceEventSchema.index({ purgeAfter: 1 });

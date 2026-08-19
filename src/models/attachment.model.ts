@@ -25,6 +25,7 @@ export const attachmentSchema = new Schema<AttachmentDocument>(
       default: null,
     },
     uploadedBy: { type: Schema.Types.ObjectId, ref: "users", required: true },
+    purgeAfter: { type: Date, default: null },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
@@ -34,3 +35,4 @@ export const attachmentSchema = new Schema<AttachmentDocument>(
 
 attachmentSchema.index({ vehicleId: 1, createdAt: -1 });
 attachmentSchema.index({ "link.documentId": 1 });
+attachmentSchema.index({ purgeAfter: 1 });

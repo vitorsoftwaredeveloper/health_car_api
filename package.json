@@ -17,7 +17,8 @@
     "seed:templates": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seeds/planTemplates.seed.ts",
     "seed": "npm run seed:catalog && npm run seed:templates",
     "job:recalculate": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runRecalculateHealth.ts",
-    "job:notify": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runSendNotifications.ts"
+    "job:notify": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runSendNotifications.ts",
+    "job:purge": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runPurgeExpired.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.159",
