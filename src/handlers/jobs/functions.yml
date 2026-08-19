@@ -66,3 +66,21 @@ purgeExpiredJob:
     - schedule:
         rate: cron(30 9 * * ? *)
         description: 06:30 America/Fortaleza
+
+anonymizeAccountsJob:
+  handler: src/handlers/jobs/anonymizeAccounts.execute
+  description: Anonimiza conta excluída depois da carência de 30 dias
+  timeout: 900
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:DeleteObject
+      Resource: arn:aws:s3:::${self:custom.attachmentsBucket}/*
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource: arn:aws:ssm:${self:provider.region}:*:parameter/health_car/*
+  events:
+    - schedule:
+        rate: cron(45 9 * * ? *)
+        description: 06:45 America/Fortaleza

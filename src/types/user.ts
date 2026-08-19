@@ -25,12 +25,17 @@ export interface UserPreferences {
   theme: Theme;
 }
 
+export type AccountStatus = "active" | "pending_deletion" | "anonymized";
+
 export interface AccountDocument {
   _id?: Types.ObjectId;
   name: string;
   ownerId: Types.ObjectId;
   plan: Plan;
   vehicleLimit: number;
+  status: AccountStatus;
+  deletionRequestedAt?: Date | null;
+  purgeAfter?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -46,6 +51,7 @@ export interface UserDocument {
   preferences: UserPreferences;
   lgpdAcceptedAt?: Date | null;
   lgpdTermsVersion?: string | null;
+  anonymizedAt?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }

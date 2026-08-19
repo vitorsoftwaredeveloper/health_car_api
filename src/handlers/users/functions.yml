@@ -37,3 +37,34 @@ acceptLgpdConsent:
         path: /v1/me/lgpd-consent
         authorizer:
           name: cognitoJwt
+
+exportAccountData:
+  handler: src/handlers/users/exportData.execute
+  description: Portabilidade LGPD em JSON
+  timeout: 29
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/me/export
+        authorizer:
+          name: cognitoJwt
+
+requestAccountDeletion:
+  handler: src/handlers/users/requestDeletion.execute
+  description: Pede exclusão da conta com carência de 30 dias
+  events:
+    - httpApi:
+        method: DELETE
+        path: /v1/me
+        authorizer:
+          name: cognitoJwt
+
+cancelAccountDeletion:
+  handler: src/handlers/users/cancelDeletion.execute
+  description: Cancela o pedido de exclusão dentro da carência
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/me/cancel-deletion
+        authorizer:
+          name: cognitoJwt

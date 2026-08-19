@@ -49,6 +49,7 @@ const provisionOwner = async (auth: AuthClaims): Promise<UserDocument> => {
         ownerId: userId,
         plan: "free",
         vehicleLimit: DEFAULT_VEHICLE_LIMIT,
+        status: "active",
       },
       { session },
     );

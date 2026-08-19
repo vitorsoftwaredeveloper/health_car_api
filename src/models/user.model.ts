@@ -42,6 +42,7 @@ export const userSchema = new Schema<UserDocument>(
     preferences: { type: preferencesSchema, default: defaultPreferences },
     lgpdAcceptedAt: { type: Date, default: null },
     lgpdTermsVersion: { type: String, default: null },
+    anonymizedAt: { type: Date, default: null },
   },
   { timestamps: true, collection: "users" },
 );

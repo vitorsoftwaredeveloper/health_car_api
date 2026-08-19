@@ -33,6 +33,8 @@ export interface MeView {
     plan: string;
     vehicleLimit: number;
     isOwner: boolean;
+    status: string;
+    purgeAfter: Date | null;
   };
   vehicles: VehicleView[];
 }
@@ -76,6 +78,8 @@ const toView = async (
     plan: account.plan,
     vehicleLimit: account.vehicleLimit,
     isOwner: String(account.ownerId) === String(user._id),
+    status: account.status,
+    purgeAfter: account.purgeAfter ?? null,
   },
   vehicles,
 });
