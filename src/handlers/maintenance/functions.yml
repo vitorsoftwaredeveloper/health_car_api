@@ -37,3 +37,23 @@ createAttachmentUpload:
         path: /v1/vehicles/{vehicleId}/attachments
         authorizer:
           name: cognitoJwt
+
+updateMaintenanceService:
+  handler: src/handlers/maintenance/updateService.execute
+  description: Edita o serviço e recalcula a partir do histórico
+  events:
+    - httpApi:
+        method: PUT
+        path: /v1/vehicles/{vehicleId}/services/{eventId}
+        authorizer:
+          name: cognitoJwt
+
+reverseMaintenanceService:
+  handler: src/handlers/maintenance/reverseService.execute
+  description: Estorna o serviço sem retroceder o ciclo do item
+  events:
+    - httpApi:
+        method: DELETE
+        path: /v1/vehicles/{vehicleId}/services/{eventId}
+        authorizer:
+          name: cognitoJwt

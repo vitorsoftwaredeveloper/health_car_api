@@ -10,6 +10,10 @@ import {
 import { createVehicle } from "../../src/services/vehicles/vehicle.service";
 import { getVehicleHealth } from "../../src/services/vehicles/health.service";
 import { registerMaintenanceEvent } from "../../src/services/maintenance/maintenance.service";
+import {
+  reverseMaintenanceEvent,
+  updateMaintenanceEvent,
+} from "../../src/services/maintenance/eventRevision.service";
 import { listMaintenanceEvents } from "../../src/services/maintenance/history.service";
 import { resolveAlert } from "../../src/services/alerts/resolveAlert.service";
 import { listAlerts } from "../../src/services/alerts/alertInbox.service";
@@ -194,5 +198,134 @@ describe("fluxo 2 — serviço com baixa transacional", () => {
     const after = await findPlanItem(vehicle.id, "ENGINE_OIL");
     expect(after.snoozedUntil).toBeNull();
     expect(after.snoozedUntilKm).toBeNull();
+  });
+});
+
+describe("fluxo 5 — estorno e edição de serviço", () => {
+  beforeEach(async () => {
+    await seedCatalogAndTemplate();
+  });
+
+  const givenTwoServicesOnOil = async (suffix: string) => {
+    const owner = await givenOwner(suffix);
+    const vehicle = await createVehicle(owner, vehiclePayload());
+    const oil = await findPlanItem(vehicle.id, "ENGINE_OIL");
+
+    const first = await registerMaintenanceEvent(owner, vehicle.id, {
+      km: 78200,
+      date: addDays(today(), -60).toISOString().slice(0, 10),
+      items: [
+        {
+          planItemId: String(oil._id),
+          action: "replace",
+          description: "Óleo antigo",
+          partCents: 30000,
+        },
+      ],
+    });
+
+    const second = await registerMaintenanceEvent(owner, vehicle.id, {
+      km: 78900,
+      date: today().toISOString().slice(0, 10),
+      items: [
+        {
+          planItemId: String(oil._id),
+          action: "replace",
+          description: "Óleo novo",
+          partCents: 32000,
+        },
+      ],
+    });
+
+    return { owner, vehicle, oil, first, second };
+  };
+
+  it("estorno volta a última troca para o evento anterior sem mexer no ciclo", async () => {
+    const { owner, vehicle, second } = await givenTwoServicesOnOil("estorno");
+
+    const before = await findPlanItem(vehicle.id, "ENGINE_OIL");
+    expect(before.cycle).toBe(2);
+    expect(before.lastServiceKm).toBe(78900);
+
+    const result = await reverseMaintenanceEvent(owner, vehicle.id, second.event.id);
+
+    expect(result.event).toBeNull();
+    expect(result.restatedItems[0].cycle).toBe(2);
+    expect(result.restatedItems[0].lastServiceKm).toBe(78200);
+
+    expect(await countIn("maintenanceEvents")).toBe(1);
+    expect(await countIn("odometerReadings", { source: "service" })).toBe(1);
+  });
+
+  it("estorno do único serviço devolve o item para unknown", async () => {
+    const owner = await givenOwner("estorno-unico");
+    const vehicle = await createVehicle(owner, vehiclePayload());
+    const oil = await findPlanItem(vehicle.id, "ENGINE_OIL");
+
+    const event = await registerMaintenanceEvent(owner, vehicle.id, {
+      km: 78900,
+      items: [
+        { planItemId: String(oil._id), action: "replace", description: "Óleo" },
+      ],
+    });
+
+    const result = await reverseMaintenanceEvent(owner, vehicle.id, event.event.id);
+
+    expect(result.restatedItems[0].status).toBe("unknown");
+    expect(result.restatedItems[0].lastServiceKm).toBeNull();
+    expect(result.restatedItems[0].cycle).toBe(1);
+    expect(await countIn("maintenanceEvents")).toBe(0);
+  });
+
+  it("edição corrige valor e quilometragem, e reflete na linha do tempo", async () => {
+    const { owner, vehicle, oil, second } = await givenTwoServicesOnOil("edicao");
+
+    const result = await updateMaintenanceEvent(owner, vehicle.id, second.event.id, {
+      km: 79100,
+      date: today().toISOString().slice(0, 10),
+      items: [
+        {
+          planItemId: String(oil._id),
+          action: "replace",
+          description: "Óleo 5W40 sintético",
+          partCents: 36000,
+        },
+      ],
+      laborCents: 9000,
+    });
+
+    expect(result.event?.totalCents).toBe(45000);
+    expect(result.restatedItems[0].lastServiceKm).toBe(79100);
+
+    const timeline = await listMaintenanceEvents(owner, vehicle.id, {});
+    expect(timeline.totalCentsInPage).toBe(75000);
+
+    const item = await findPlanItem(vehicle.id, "ENGINE_OIL");
+    expect(item.lastServiceKm).toBe(79100);
+    expect(item.cycle).toBe(2);
+  });
+
+  it("tirar um item da edição devolve esse item ao estado anterior", async () => {
+    const { owner, vehicle, second } = await givenTwoServicesOnOil("troca-item");
+    const cabin = await findPlanItem(vehicle.id, "CABIN_FILTER");
+
+    await updateMaintenanceEvent(owner, vehicle.id, second.event.id, {
+      km: 78900,
+      date: today().toISOString().slice(0, 10),
+      items: [
+        {
+          planItemId: String(cabin._id),
+          action: "replace",
+          description: "Filtro de cabine",
+        },
+      ],
+    });
+
+    const oilAfter = await findPlanItem(vehicle.id, "ENGINE_OIL");
+    const cabinAfter = await findPlanItem(vehicle.id, "CABIN_FILTER");
+
+    expect(oilAfter.lastServiceKm).toBe(78200);
+    expect(cabinAfter.lastServiceKm).toBe(78900);
+    expect(oilAfter.cycle).toBe(2);
   });
 });
