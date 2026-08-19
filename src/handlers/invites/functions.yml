@@ -1,0 +1,48 @@
+inviteDriver:
+  handler: src/handlers/invites/inviteDriver.execute
+  description: Convida condutor e vincula aos veículos escolhidos
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cognito-idp:AdminCreateUser
+        - cognito-idp:AdminAddUserToGroup
+      Resource: ${self:custom.config.environment.COGNITO_USER_POOL_ARN}
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource: arn:aws:ssm:${self:provider.region}:*:parameter/health_car/*
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/invites
+        authorizer:
+          name: cognitoJwt
+
+listDrivers:
+  handler: src/handlers/invites/listDrivers.execute
+  description: Condutores da conta e os veículos de cada um
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/invites
+        authorizer:
+          name: cognitoJwt
+
+revokeDriver:
+  handler: src/handlers/invites/revokeDriver.execute
+  description: Remove o condutor da conta e do Cognito
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cognito-idp:AdminDeleteUser
+      Resource: ${self:custom.config.environment.COGNITO_USER_POOL_ARN}
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource: arn:aws:ssm:${self:provider.region}:*:parameter/health_car/*
+  events:
+    - httpApi:
+        method: DELETE
+        path: /v1/invites/{driverId}
+        authorizer:
+          name: cognitoJwt

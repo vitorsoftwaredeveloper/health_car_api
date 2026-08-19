@@ -75,18 +75,28 @@ export const recalculateVehicle = async (
   const now = today();
 
   const readings = (await odometerReadingRepository.find({ vehicleId: vehicle._id }, null, {
-    sort: { date: -1 },
+    sort: { date: -1, createdAt: -1 },
     limit: READING_WINDOW_SIZE,
     ...(session ? { session } : {}),
   })) as OdometerReadingDocument[];
 
   const kmPerDay = computeKmPerDay(readings, now);
 
+  const isNewer = (
+    candidate: OdometerReadingDocument,
+    current: OdometerReadingDocument,
+  ): boolean => {
+    const byDate = candidate.date.getTime() - current.date.getTime();
+    if (byDate !== 0) return byDate > 0;
+
+    return (
+      (candidate.createdAt?.getTime() ?? 0) > (current.createdAt?.getTime() ?? 0)
+    );
+  };
+
   const latest = readings.reduce<OdometerReadingDocument | null>(
     (newest, reading) =>
-      !newest || reading.date.getTime() > newest.date.getTime()
-        ? reading
-        : newest,
+      !newest || isNewer(reading, newest) ? reading : newest,
     null,
   );
 

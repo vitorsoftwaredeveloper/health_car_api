@@ -10,6 +10,7 @@
     "NOTIFICATIONS_QUEUE_URL": "http://localhost:9324/queue/local-notifications",
     "VAPID_SUBJECT": "mailto:contato@healthcar.app",
     "VAPID_PUBLIC_KEY": "BIm2xujGnzpaJ6xTD_Y--Nad04Ryx5zBBp8Z-DsStB4tFq3K0og7AoTzBrbna-_HW2HabBY2AFmgv7xnNho52c8",
-    "VAPID_PRIVATE_KEY": "ZL7d9EmZY3LLI8-ij6OoShQM_1yrWhWDtimXj0hK9pc"
+    "VAPID_PRIVATE_KEY": "ZL7d9EmZY3LLI8-ij6OoShQM_1yrWhWDtimXj0hK9pc",
+    "COGNITO_USER_POOL_ARN": "arn:aws:cognito-idp:us-east-1:000000000000:userpool/us-east-1_local"
   }
 }

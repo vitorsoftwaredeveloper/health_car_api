@@ -8,6 +8,7 @@ import { Requester } from "../../types/user";
 import { VehicleDocument } from "../../types/vehicle";
 import { addDays, today } from "../../utils/date";
 import { httpError, STATUS_CODE } from "../../utils/errors";
+import { accessibleVehicleFilter } from "../vehicles/vehicle.service";
 
 const DEFAULT_PAGE_SIZE = 30;
 const MAX_PAGE_SIZE = 100;
@@ -67,12 +68,7 @@ const accessibleVehicleIds = async (
   requester: Requester,
 ): Promise<Types.ObjectId[]> => {
   const vehicles = (await vehicleRepository.find(
-    {
-      $or: [
-        { accountId: requester.accountId },
-        { "drivers.userId": requester.userId },
-      ],
-    },
+    accessibleVehicleFilter(requester),
     { _id: 1 },
   )) as VehicleDocument[];
 

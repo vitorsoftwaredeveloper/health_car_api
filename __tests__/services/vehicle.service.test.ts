@@ -216,6 +216,16 @@ describe("createVehicle", () => {
 });
 
 describe("listVehicles", () => {
+  it("mostra ao condutor só os veículos que ele conduz", async () => {
+    (vehicleRepository.find as jest.Mock).mockResolvedValue([storedVehicle()]);
+
+    await listVehicles(driver);
+
+    expect((vehicleRepository.find as jest.Mock).mock.calls[0][0]).toEqual({
+      "drivers.userId": driverUserId,
+    });
+  });
+
   it("busca veículos da conta e os conduzidos", async () => {
     (vehicleRepository.find as jest.Mock).mockResolvedValue([storedVehicle()]);
 

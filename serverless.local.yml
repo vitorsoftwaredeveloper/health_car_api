@@ -4,6 +4,7 @@ configValidationMode: error
 
 plugins:
   - serverless-esbuild
+  - serverless-iam-roles-per-function
   - serverless-offline
 
 package:
@@ -46,3 +47,4 @@ functions:
   - ${file(src/handlers/alerts/functions.yml)}
   - ${file(src/handlers/maintenance/functions.yml)}
   - ${file(src/handlers/devices/functions.yml)}
+  - ${file(src/handlers/invites/functions.yml)}

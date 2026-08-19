@@ -37,9 +37,13 @@ export const assertVehicleAccess = async (
   })) as VehicleDocument | null;
 
   if (!vehicle) throw notFound();
-  if (!belongsToAccount(vehicle, requester) && !isDriver(vehicle, requester)) {
-    throw notFound();
-  }
+
+  const allowed =
+    requester.role === "driver"
+      ? isDriver(vehicle, requester)
+      : belongsToAccount(vehicle, requester) || isDriver(vehicle, requester);
+
+  if (!allowed) throw notFound();
 
   if (level === "manage" && requester.role !== "owner") {
     throw httpError(

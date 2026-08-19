@@ -159,16 +159,23 @@ const assertVehicleLimit = async (requester: Requester): Promise<void> => {
   }
 };
 
+export const accessibleVehicleFilter = (
+  requester: Requester,
+): Record<string, unknown> =>
+  requester.role === "driver"
+    ? { "drivers.userId": requester.userId }
+    : {
+        $or: [
+          { accountId: requester.accountId },
+          { "drivers.userId": requester.userId },
+        ],
+      };
+
 export const listVehicles = async (
   requester: Requester,
 ): Promise<VehicleView[]> => {
   const vehicles = (await vehicleRepository.find(
-    {
-      $or: [
-        { accountId: requester.accountId },
-        { "drivers.userId": requester.userId },
-      ],
-    },
+    accessibleVehicleFilter(requester),
     null,
     { sort: { createdAt: 1 } },
   )) as VehicleDocument[];

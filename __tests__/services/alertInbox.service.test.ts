@@ -106,7 +106,7 @@ describe("listAlerts", () => {
       accountId,
       vehicleId: { $in: [vehicleId] },
     });
-    expect((vehicleRepository.find as jest.Mock).mock.calls[0][0].$or[1]).toEqual({
+    expect((vehicleRepository.find as jest.Mock).mock.calls[0][0]).toEqual({
       "drivers.userId": driverUserId,
     });
   });

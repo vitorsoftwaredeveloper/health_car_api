@@ -1,6 +1,14 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 import { STATUS_CODE } from "./errors";
 
+export const SECURITY_HEADERS: Record<string, string> = {
+  "Content-Type": "application/json; charset=utf-8",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "no-referrer",
+  "Cache-Control": "no-store",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+};
+
 const CODE_BY_STATUS: Record<number, string> = {
   [STATUS_CODE.BAD_REQUEST]: "BAD_REQUEST",
   [STATUS_CODE.UNAUTHORIZED]: "UNAUTHORIZED",
@@ -8,6 +16,7 @@ const CODE_BY_STATUS: Record<number, string> = {
   [STATUS_CODE.NOT_FOUND]: "NOT_FOUND",
   [STATUS_CODE.CONFLICT]: "CONFLICT",
   [STATUS_CODE.UNPROCESSABLE_ENTITY]: "UNPROCESSABLE_ENTITY",
+  [STATUS_CODE.TOO_MANY_REQUESTS]: "RATE_LIMIT_EXCEEDED",
   [STATUS_CODE.INTERNAL_SERVER_ERROR]: "INTERNAL_SERVER_ERROR",
 };
 
@@ -16,6 +25,7 @@ export const sendErrorResponse = (error: any): APIGatewayProxyResult => {
 
   return {
     statusCode,
+    headers: SECURITY_HEADERS,
     body: JSON.stringify({
       error: {
         code: error.code || CODE_BY_STATUS[statusCode] || "INTERNAL_SERVER_ERROR",
@@ -31,6 +41,7 @@ export const sendSuccessResponse = (
   statusCode: number = STATUS_CODE.SUCCESS,
 ): APIGatewayProxyResult => ({
   statusCode,
+  headers: SECURITY_HEADERS,
   body: statusCode === STATUS_CODE.NO_CONTENT
     ? ""
     : JSON.stringify(data === undefined ? {} : { data }),

@@ -87,6 +87,27 @@ describe("recalculateVehicle", () => {
     expect(result.odometerConfidence).toBe("high");
   });
 
+  it("usa a leitura mais recente quando há duas no mesmo dia", async () => {
+    (odometerReadingRepository.find as jest.Mock).mockResolvedValue([
+      { km: 79000, date: today(), createdAt: new Date("2026-08-19T10:00:00.000Z") },
+      { km: 79500, date: today(), createdAt: new Date("2026-08-19T18:00:00.000Z") },
+      { km: 74000, date: addDays(today(), -50) },
+    ]);
+
+    const result = await recalculateVehicle(vehicle);
+
+    expect(result.reportedOdometer).toBe(79500);
+    expect(result.estimatedOdometer).toBe(79500);
+  });
+
+  it("ordena a série por data e por gravação", async () => {
+    await recalculateVehicle(vehicle);
+
+    expect((odometerReadingRepository.find as jest.Mock).mock.calls[0][2]).toMatchObject({
+      sort: { date: -1, createdAt: -1 },
+    });
+  });
+
   it("marca item vencido por quilometragem e devolve a mudança de status", async () => {
     (odometerReadingRepository.find as jest.Mock).mockResolvedValue([
       { km: 85000, date: today() },
