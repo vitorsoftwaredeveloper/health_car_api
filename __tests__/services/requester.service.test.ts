@@ -61,14 +61,6 @@ describe("resolveRequester", () => {
     expect(requester.user.preferences.pushEnabled).toBe(true);
   });
 
-  it("recusa condutor sem convite", async () => {
-    (userRepository.findOne as jest.Mock).mockResolvedValue(null);
-
-    await expect(
-      resolveRequester({ ...ownerClaims, role: "driver", groups: ["driver"] }),
-    ).rejects.toMatchObject({ statusCode: 403, code: "USER_NOT_PROVISIONED" });
-  });
-
   it("recusa token sem e-mail", async () => {
     (userRepository.findOne as jest.Mock).mockResolvedValue(null);
 

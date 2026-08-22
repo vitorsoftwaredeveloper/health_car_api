@@ -1,7 +1,7 @@
 import { AuthClaims, Role } from "../types/auth";
 import { httpError, STATUS_CODE } from "../utils/errors";
 
-const ROLES: Role[] = ["owner", "driver", "admin"];
+const ROLES: Role[] = ["owner", "admin"];
 
 const isRole = (value: string): value is Role =>
   (ROLES as string[]).includes(value);

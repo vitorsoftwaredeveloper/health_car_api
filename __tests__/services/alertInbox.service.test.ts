@@ -27,19 +27,11 @@ const accountId = new Types.ObjectId();
 const vehicleId = new Types.ObjectId();
 const planItemId = new Types.ObjectId();
 const alertId = new Types.ObjectId();
-const driverUserId = new Types.ObjectId();
 
 const owner: Requester = {
   userId: new Types.ObjectId(),
   accountId,
   role: "owner",
-  user: {} as any,
-};
-
-const driver: Requester = {
-  userId: driverUserId,
-  accountId,
-  role: "driver",
   user: {} as any,
 };
 
@@ -99,18 +91,6 @@ describe("listAlerts", () => {
     });
   });
 
-  it("limita o condutor aos veículos que ele conduz", async () => {
-    await listAlerts(driver, {});
-
-    expect((alertRepository.find as jest.Mock).mock.calls[0][0]).toEqual({
-      accountId,
-      vehicleId: { $in: [vehicleId] },
-    });
-    expect((vehicleRepository.find as jest.Mock).mock.calls[0][0]).toEqual({
-      "drivers.userId": driverUserId,
-    });
-  });
-
   it("devolve cursor quando há próxima página", async () => {
     (alertRepository.find as jest.Mock).mockResolvedValue([
       alert({ createdAt: new Date("2026-08-18T09:00:00.000Z") }),
@@ -157,16 +137,6 @@ describe("markAlertAsRead", () => {
     await expect(markAlertAsRead(owner, String(alertId))).rejects.toMatchObject({
       statusCode: 404,
       code: "ALERT_NOT_FOUND",
-    });
-  });
-
-  it("esconde do condutor alerta de veículo que ele não conduz", async () => {
-    (vehicleRepository.find as jest.Mock).mockResolvedValue([
-      { _id: new Types.ObjectId() },
-    ]);
-
-    await expect(markAlertAsRead(driver, String(alertId))).rejects.toMatchObject({
-      statusCode: 404,
     });
   });
 

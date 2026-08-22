@@ -1,5 +1,4 @@
 import { Types } from "mongoose";
-import { Role } from "./auth";
 
 export type Fuel =
   | "flex"
@@ -13,12 +12,6 @@ export type Fuel =
 export type Transmission = "manual" | "automatic" | "cvt" | "automated";
 
 export type VehicleStatus = "active" | "sold" | "archived";
-
-export interface VehicleDriver {
-  userId: Types.ObjectId;
-  role: Role;
-  addedAt: Date;
-}
 
 export interface VehicleDocument {
   _id?: Types.ObjectId;
@@ -41,7 +34,6 @@ export interface VehicleDocument {
   currentOdometerAt: Date;
   kmPerDay: number;
   healthScore: number;
-  drivers: VehicleDriver[];
   status: VehicleStatus;
   createdAt?: Date;
   updatedAt?: Date;

@@ -9,7 +9,7 @@ import { STATUS_CODE } from "../../utils/errors";
 import { sendSuccessResponse } from "../../utils/http";
 
 export const execute = withErrorHandling(
-  requireRole("owner", "driver")(
+  requireRole("owner")(
     async (event, auth): Promise<APIGatewayProxyResult> => {
       const requester = await resolveRequester(auth);
       const alertId = event.pathParameters?.alertId as string;

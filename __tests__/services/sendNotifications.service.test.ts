@@ -53,7 +53,6 @@ beforeEach(() => {
     _id: vehicleId,
     accountId,
     nickname: "Meu Civic",
-    drivers: [],
   });
   (alertRepository.find as jest.Mock).mockResolvedValue([
     {
@@ -190,25 +189,18 @@ describe("runSendNotifications", () => {
     expect(notificationRepository.insertOne).not.toHaveBeenCalled();
   });
 
-  it("notifica o condutor além do dono", async () => {
-    const driverId = new Types.ObjectId();
-    (vehicleRepository.findById as jest.Mock).mockResolvedValue({
-      _id: vehicleId,
-      accountId,
-      nickname: "Meu Civic",
-      drivers: [{ userId: driverId }],
-    });
+  it("busca só os donos da conta como destinatários", async () => {
     (userRepository.find as jest.Mock).mockResolvedValue([
       { _id: userId, preferences: mergePreferences(defaultPreferences(), { quietHours: null }) },
-      { _id: driverId, preferences: mergePreferences(defaultPreferences(), { quietHours: null }) },
     ]);
 
     const result = await runSendNotifications([message()]);
 
-    expect((userRepository.find as jest.Mock).mock.calls[0][0].$or[1]).toEqual({
-      _id: { $in: [driverId] },
+    expect((userRepository.find as jest.Mock).mock.calls[0][0]).toEqual({
+      accountId,
+      role: "owner",
     });
-    expect(result.sent).toBe(2);
+    expect(result.sent).toBe(1);
   });
 
   it("entrega o lembrete de odômetro sem olhar os marcos", async () => {

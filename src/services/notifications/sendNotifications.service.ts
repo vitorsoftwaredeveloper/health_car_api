@@ -52,13 +52,9 @@ const localTimeIn = (timezone: string, reference = new Date()): string =>
 const loadRecipients = async (
   vehicle: VehicleDocument,
 ): Promise<UserDocument[]> => {
-  const driverIds = vehicle.drivers.map((driver) => driver.userId);
-
   return (await userRepository.find({
-    $or: [
-      { accountId: vehicle.accountId, role: "owner" },
-      { _id: { $in: driverIds } },
-    ],
+    accountId: vehicle.accountId,
+    role: "owner",
   })) as UserDocument[];
 };
 

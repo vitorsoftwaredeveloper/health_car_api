@@ -17,11 +17,6 @@ const toObjectId = (vehicleId: string): Types.ObjectId => {
   return new Types.ObjectId(vehicleId);
 };
 
-const isDriver = (vehicle: VehicleDocument, requester: Requester): boolean =>
-  vehicle.drivers.some(
-    (driver) => String(driver.userId) === String(requester.userId),
-  );
-
 const belongsToAccount = (
   vehicle: VehicleDocument,
   requester: Requester,
@@ -38,12 +33,7 @@ export const assertVehicleAccess = async (
 
   if (!vehicle) throw notFound();
 
-  const allowed =
-    requester.role === "driver"
-      ? isDriver(vehicle, requester)
-      : belongsToAccount(vehicle, requester) || isDriver(vehicle, requester);
-
-  if (!allowed) throw notFound();
+  if (!belongsToAccount(vehicle, requester)) throw notFound();
 
   if (level === "manage" && requester.role !== "owner") {
     throw httpError(
@@ -51,10 +41,6 @@ export const assertVehicleAccess = async (
       "FORBIDDEN",
       "Só o proprietário pode alterar este veículo.",
     );
-  }
-
-  if (level === "manage" && !belongsToAccount(vehicle, requester)) {
-    throw notFound();
   }
 
   return vehicle;

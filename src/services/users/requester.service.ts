@@ -77,14 +77,6 @@ export const resolveRequester = async (
   const existing = await findByCognitoSub(auth.sub);
   if (existing) return toRequester(existing);
 
-  if (auth.role === "driver") {
-    throw httpError(
-      STATUS_CODE.FORBIDDEN,
-      "USER_NOT_PROVISIONED",
-      "Convite não encontrado. Peça ao proprietário para convidar você novamente.",
-    );
-  }
-
   if (!auth.email) {
     throw httpError(
       STATUS_CODE.UNPROCESSABLE_ENTITY,

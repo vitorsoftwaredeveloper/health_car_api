@@ -51,10 +51,10 @@ const accountId = new Types.ObjectId();
 const userId = new Types.ObjectId();
 
 const owner: Requester = { userId, accountId, role: "owner", user: {} as any };
-const driver: Requester = {
+const otherUser: Requester = {
   userId: new Types.ObjectId(),
   accountId,
-  role: "driver",
+  role: "owner",
   user: {} as any,
 };
 
@@ -176,7 +176,7 @@ describe("requestAccountDeletion", () => {
   });
 
   it("só o dono da conta pode pedir exclusão", async () => {
-    await expect(requestAccountDeletion(driver)).rejects.toMatchObject({
+    await expect(requestAccountDeletion(otherUser)).rejects.toMatchObject({
       statusCode: 403,
       code: "FORBIDDEN",
     });

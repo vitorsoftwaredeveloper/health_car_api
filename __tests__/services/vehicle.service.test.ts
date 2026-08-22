@@ -80,14 +80,6 @@ const owner: Requester = {
   user: {} as any,
 };
 
-const driverUserId = new Types.ObjectId();
-const driver: Requester = {
-  userId: driverUserId,
-  accountId: new Types.ObjectId(),
-  role: "driver",
-  user: {} as any,
-};
-
 const storedVehicle = (overrides: Partial<VehicleDocument> = {}): VehicleDocument =>
   ({
     _id: vehicleId,
@@ -105,7 +97,6 @@ const storedVehicle = (overrides: Partial<VehicleDocument> = {}): VehicleDocumen
     currentOdometerAt: new Date("2026-08-02"),
     kmPerDay: 33,
     healthScore: 100,
-    drivers: [{ userId: driverUserId, role: "driver", addedAt: new Date() }],
     status: "active",
     ...overrides,
   }) as VehicleDocument;
@@ -137,7 +128,6 @@ describe("createVehicle", () => {
     const document = (vehicleRepository.insertOne as jest.Mock).mock.calls[0][0];
     expect(document.plate).toBe("ENC:BRA2E19");
     expect(document.plateHash).toBe("HASH:BRA2E19");
-    expect(document.drivers[0].userId).toBe(userId);
     expect(document.kmPerDay).toBe(33);
     expect(view.plate).toBe("BRA2E19");
     expect(view.healthScore).toBe(100);
@@ -216,26 +206,14 @@ describe("createVehicle", () => {
 });
 
 describe("listVehicles", () => {
-  it("mostra ao condutor só os veículos que ele conduz", async () => {
-    (vehicleRepository.find as jest.Mock).mockResolvedValue([storedVehicle()]);
-
-    await listVehicles(driver);
-
-    expect((vehicleRepository.find as jest.Mock).mock.calls[0][0]).toEqual({
-      "drivers.userId": driverUserId,
-    });
-  });
-
-  it("busca veículos da conta e os conduzidos", async () => {
+  it("busca só os veículos da conta", async () => {
     (vehicleRepository.find as jest.Mock).mockResolvedValue([storedVehicle()]);
 
     const list = await listVehicles(owner);
 
-    const filter = (vehicleRepository.find as jest.Mock).mock.calls[0][0];
-    expect(filter.$or).toEqual([
-      { accountId },
-      { "drivers.userId": userId },
-    ]);
+    expect((vehicleRepository.find as jest.Mock).mock.calls[0][0]).toEqual({
+      accountId,
+    });
     expect(list[0].plate).toBe("BRA2E19");
   });
 });
@@ -244,12 +222,6 @@ describe("assertVehicleAccess", () => {
   it("devolve o veículo para o dono da conta", async () => {
     await expect(
       assertVehicleAccess(owner, String(vehicleId), "manage"),
-    ).resolves.toMatchObject({ _id: vehicleId });
-  });
-
-  it("devolve o veículo para o condutor vinculado", async () => {
-    await expect(
-      assertVehicleAccess(driver, String(vehicleId), "read"),
     ).resolves.toMatchObject({ _id: vehicleId });
   });
 
@@ -280,22 +252,16 @@ describe("assertVehicleAccess", () => {
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
-  it("impede condutor de gerenciar o veículo", async () => {
-    await expect(
-      assertVehicleAccess(driver, String(vehicleId), "manage"),
-    ).rejects.toMatchObject({ statusCode: 403, code: "FORBIDDEN" });
-  });
-
-  it("impede dono de outra conta de gerenciar veículo que só conduz", async () => {
-    const guestOwner: Requester = {
-      userId: driverUserId,
+  it("impede quem não é dono da conta de gerenciar o veículo", async () => {
+    const otherOwner: Requester = {
+      userId: new Types.ObjectId(),
       accountId: new Types.ObjectId(),
       role: "owner",
       user: {} as any,
     };
 
     await expect(
-      assertVehicleAccess(guestOwner, String(vehicleId), "manage"),
+      assertVehicleAccess(otherOwner, String(vehicleId), "manage"),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

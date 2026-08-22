@@ -7,7 +7,7 @@ import { AlertStatus } from "../../types/alert";
 import { sendSuccessResponse } from "../../utils/http";
 
 export const execute = withErrorHandling(
-  requireRole("owner", "driver", "admin")(
+  requireRole("owner", "admin")(
     async (event, auth): Promise<APIGatewayProxyResult> => {
       const requester = await resolveRequester(auth);
       const query = event.queryStringParameters ?? {};

@@ -38,7 +38,7 @@ export const userSchema = new Schema<UserDocument>(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     phone: { type: String, default: null },
-    role: { type: String, enum: ["owner", "driver", "admin"], required: true },
+    role: { type: String, enum: ["owner", "admin"], required: true },
     preferences: { type: preferencesSchema, default: defaultPreferences },
     lgpdAcceptedAt: { type: Date, default: null },
     lgpdTermsVersion: { type: String, default: null },

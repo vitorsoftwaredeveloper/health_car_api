@@ -1,4 +1,4 @@
-export type Role = "owner" | "driver" | "admin";
+export type Role = "owner" | "admin";
 
 export interface AuthClaims {
   sub: string;

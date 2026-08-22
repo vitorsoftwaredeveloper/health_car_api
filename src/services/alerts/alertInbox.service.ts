@@ -64,17 +64,6 @@ const toAlertView = (alert: AlertDocument): AlertView => ({
 const alertNotFound = () =>
   httpError(STATUS_CODE.NOT_FOUND, "ALERT_NOT_FOUND", "Alerta não encontrado.");
 
-const accessibleVehicleIds = async (
-  requester: Requester,
-): Promise<Types.ObjectId[]> => {
-  const vehicles = (await vehicleRepository.find(
-    accessibleVehicleFilter(requester),
-    { _id: 1 },
-  )) as VehicleDocument[];
-
-  return vehicles.map((vehicle) => vehicle._id as Types.ObjectId);
-};
-
 export const loadAccessibleAlert = async (
   requester: Requester,
   alertId: string,
@@ -87,14 +76,6 @@ export const loadAccessibleAlert = async (
   })) as AlertDocument | null;
 
   if (!alert) throw alertNotFound();
-
-  if (requester.role === "driver") {
-    const vehicleIds = await accessibleVehicleIds(requester);
-    const allowed = vehicleIds.some(
-      (id) => String(id) === String(alert.vehicleId),
-    );
-    if (!allowed) throw alertNotFound();
-  }
 
   return alert;
 };
@@ -117,13 +98,6 @@ export const listAlerts = async (
       );
     }
     filter.vehicleId = new Types.ObjectId(query.vehicleId);
-  }
-
-  if (requester.role === "driver") {
-    const vehicleIds = await accessibleVehicleIds(requester);
-    filter.vehicleId = query.vehicleId
-      ? new Types.ObjectId(query.vehicleId)
-      : { $in: vehicleIds };
   }
 
   if (query.before) filter.createdAt = { $lt: new Date(query.before) };

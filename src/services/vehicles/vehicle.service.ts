@@ -82,7 +82,6 @@ export interface VehicleView {
   kmPerDay: number;
   healthScore: number;
   status: VehicleStatus;
-  driverCount: number;
   createdAt: Date | null;
 }
 
@@ -139,7 +138,6 @@ export const toVehicleView = async (
   kmPerDay: vehicle.kmPerDay,
   healthScore: vehicle.healthScore,
   status: vehicle.status,
-  driverCount: vehicle.drivers.length,
   createdAt: vehicle.createdAt ?? null,
 });
 
@@ -161,15 +159,7 @@ const assertVehicleLimit = async (requester: Requester): Promise<void> => {
 
 export const accessibleVehicleFilter = (
   requester: Requester,
-): Record<string, unknown> =>
-  requester.role === "driver"
-    ? { "drivers.userId": requester.userId }
-    : {
-        $or: [
-          { accountId: requester.accountId },
-          { "drivers.userId": requester.userId },
-        ],
-      };
+): Record<string, unknown> => ({ accountId: requester.accountId });
 
 export const listVehicles = async (
   requester: Requester,
@@ -224,9 +214,6 @@ export const createVehicle = async (
       : today(),
     kmPerDay: KM_PER_DAY_FALLBACK,
     healthScore: 100,
-    drivers: [
-      { userId: requester.userId, role: requester.role, addedAt: new Date() },
-    ],
     status: "active" as VehicleStatus,
   };
 

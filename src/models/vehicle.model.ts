@@ -2,15 +2,6 @@ import { Schema } from "mongoose";
 import { KM_PER_DAY_FALLBACK } from "../domain/constants";
 import { VehicleDocument } from "../types/vehicle";
 
-const driverSchema = new Schema(
-  {
-    userId: { type: Schema.Types.ObjectId, ref: "users", required: true },
-    role: { type: String, enum: ["owner", "driver", "admin"], required: true },
-    addedAt: { type: Date, default: Date.now },
-  },
-  { _id: false },
-);
-
 export const vehicleSchema = new Schema<VehicleDocument>(
   {
     accountId: { type: Schema.Types.ObjectId, ref: "accounts", required: true },
@@ -40,7 +31,6 @@ export const vehicleSchema = new Schema<VehicleDocument>(
     currentOdometerAt: { type: Date, required: true },
     kmPerDay: { type: Number, default: KM_PER_DAY_FALLBACK, required: true },
     healthScore: { type: Number, default: 100, required: true },
-    drivers: { type: [driverSchema], default: [] },
     status: {
       type: String,
       enum: ["active", "sold", "archived"],
@@ -52,5 +42,4 @@ export const vehicleSchema = new Schema<VehicleDocument>(
 );
 
 vehicleSchema.index({ accountId: 1, status: 1 });
-vehicleSchema.index({ "drivers.userId": 1 });
 vehicleSchema.index({ accountId: 1, plateHash: 1 }, { unique: true });
