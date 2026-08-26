@@ -18,6 +18,7 @@ import { httpError, STATUS_CODE } from "../../utils/errors";
 import { recalculateVehicle } from "../plan/recalculate.service";
 import { assertVehicleAccess } from "../vehicles/access.service";
 import {
+  linkAttachments,
   MaintenanceEventView,
   RegisterMaintenancePayload,
   toMaintenanceEventView,
@@ -227,6 +228,32 @@ export const updateMaintenanceEvent = async (
   ];
 
   return withTransaction(async (session) => {
+    const attachments = payload.attachmentIds
+      ? await linkAttachments(
+          vehicle,
+          payload.attachmentIds,
+          event._id as Types.ObjectId,
+          session,
+        )
+      : (event.attachments ?? []);
+
+    const detached = (event.attachments ?? [])
+      .filter(
+        (attachment) =>
+          !attachments.some(
+            (kept) => String(kept.attachmentId) === String(attachment.attachmentId),
+          ),
+      )
+      .map((attachment) => attachment.attachmentId);
+
+    if (detached.length) {
+      await attachmentRepository.updateMany(
+        { _id: { $in: detached } },
+        { $set: { link: null } },
+        { session },
+      );
+    }
+
     const updated = (await maintenanceEventRepository.findOneAndUpdate(
       { _id: event._id },
       {
@@ -236,6 +263,7 @@ export const updateMaintenanceEvent = async (
           type: payload.type ?? event.type,
           workshop: payload.workshop ?? event.workshop ?? null,
           items,
+          attachments,
           laborCents: payload.laborCents ?? null,
           totalCents: computeEventTotalCents(items, payload.laborCents),
           note: payload.note ?? null,

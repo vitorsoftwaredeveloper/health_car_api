@@ -180,7 +180,7 @@ const loadPlanItems = async (
   return new Map(items.map((item) => [String(item._id), item]));
 };
 
-const linkAttachments = async (
+export const linkAttachments = async (
   vehicle: VehicleDocument,
   attachmentIds: string[],
   eventId: Types.ObjectId,

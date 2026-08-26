@@ -21,7 +21,7 @@ jest.mock("../../src/repositories/alert.repository", () => ({
   alertRepository: { updateMany: jest.fn() },
 }));
 jest.mock("../../src/repositories/attachment.repository", () => ({
-  attachmentRepository: { updateMany: jest.fn() },
+  attachmentRepository: { updateMany: jest.fn(), find: jest.fn() },
 }));
 jest.mock("../../src/services/vehicles/access.service", () => ({
   assertVehicleAccess: jest.fn(),
@@ -105,6 +105,7 @@ beforeEach(() => {
     { _id: oilItemId, code: "ENGINE_OIL", vehicleId },
   ]);
   (recalculateVehicle as jest.Mock).mockResolvedValue(recalculated());
+  (attachmentRepository.find as jest.Mock).mockResolvedValue([]);
 });
 
 describe("reverseMaintenanceEvent", () => {
@@ -277,5 +278,82 @@ describe("updateMaintenanceEvent", () => {
     await updateMaintenanceEvent(requester, String(vehicleId), String(eventId), payload);
 
     expect(assertVehicleAccess).toHaveBeenCalledWith(requester, String(vehicleId), "write");
+  });
+
+  it("mantém os anexos quando a edição não fala de anexo", async () => {
+    const attachmentId = new Types.ObjectId();
+    (maintenanceEventRepository.findOne as jest.Mock).mockResolvedValue(
+      event({
+        attachments: [{ attachmentId, type: "receipt", fileName: "nota.pdf" }],
+      }),
+    );
+
+    await updateMaintenanceEvent(requester, String(vehicleId), String(eventId), payload);
+
+    const update = (maintenanceEventRepository.findOneAndUpdate as jest.Mock).mock
+      .calls[0][1].$set;
+    expect(update.attachments).toEqual([
+      { attachmentId, type: "receipt", fileName: "nota.pdf" },
+    ]);
+    expect(attachmentRepository.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("vincula o recibo novo enviado na edição", async () => {
+    const attachmentId = new Types.ObjectId();
+    (attachmentRepository.find as jest.Mock).mockResolvedValue([
+      { _id: attachmentId, type: "receipt", fileName: "nota.pdf", vehicleId },
+    ]);
+
+    await updateMaintenanceEvent(requester, String(vehicleId), String(eventId), {
+      ...payload,
+      attachmentIds: [String(attachmentId)],
+    });
+
+    const link = (attachmentRepository.updateMany as jest.Mock).mock.calls[0][1].$set
+      .link;
+    expect(link).toEqual({
+      collectionName: "maintenanceEvents",
+      documentId: eventId,
+    });
+
+    const update = (maintenanceEventRepository.findOneAndUpdate as jest.Mock).mock
+      .calls[0][1].$set;
+    expect(update.attachments).toEqual([
+      { attachmentId, type: "receipt", fileName: "nota.pdf" },
+    ]);
+  });
+
+  it("solta o recibo que saiu da lista da edição", async () => {
+    const removedId = new Types.ObjectId();
+    (maintenanceEventRepository.findOne as jest.Mock).mockResolvedValue(
+      event({
+        attachments: [
+          { attachmentId: removedId, type: "receipt", fileName: "errada.pdf" },
+        ],
+      }),
+    );
+
+    await updateMaintenanceEvent(requester, String(vehicleId), String(eventId), {
+      ...payload,
+      attachmentIds: [],
+    });
+
+    const [filter, update] = (attachmentRepository.updateMany as jest.Mock).mock
+      .calls[0];
+    expect(filter).toEqual({ _id: { $in: [removedId] } });
+    expect(update.$set.link).toBeNull();
+
+    const eventUpdate = (maintenanceEventRepository.findOneAndUpdate as jest.Mock).mock
+      .calls[0][1].$set;
+    expect(eventUpdate.attachments).toEqual([]);
+  });
+
+  it("recusa anexo que não é do veículo", async () => {
+    await expect(
+      updateMaintenanceEvent(requester, String(vehicleId), String(eventId), {
+        ...payload,
+        attachmentIds: [String(new Types.ObjectId())],
+      }),
+    ).rejects.toMatchObject({ statusCode: 404, code: "ATTACHMENT_NOT_FOUND" });
   });
 });
