@@ -1,9 +1,21 @@
 import { CatalogItemDocument } from "../../src/types/catalog";
+import { Fuel } from "../../src/types/vehicle";
 
 export type CatalogItemSeed = Omit<
   CatalogItemDocument,
   "_id" | "createdAt" | "updatedAt"
 >;
+
+const COMBUSTION: Fuel[] = [
+  "flex",
+  "gasoline",
+  "ethanol",
+  "diesel",
+  "cng",
+  "hybrid",
+];
+
+const ELECTRIFIED: Fuel[] = ["electric", "hybrid"];
 
 export const catalogItemsSeed: CatalogItemSeed[] = [
   {
@@ -16,7 +28,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "critical",
     whatItIs: "Óleo lubrificante do motor e o filtro que retém as impurezas em suspensão.",
     whyItMatters: "Óleo velho perde a película de proteção e o motor começa a se desgastar por dentro.",
-    appliesTo: { fuel: ["flex", "gasoline", "ethanol", "diesel", "cng", "hybrid"] },
+    appliesTo: { fuel: COMBUSTION },
     bundledWith: ["ENGINE_AIR_FILTER"],
     active: true,
   },
@@ -30,7 +42,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "medium",
     whatItIs: "Filtro que limpa o ar antes de ele entrar na câmara de combustão.",
     whyItMatters: "Entupido, sufoca o motor: sobe o consumo e cai o desempenho.",
-    appliesTo: { fuel: ["flex", "gasoline", "ethanol", "diesel", "cng", "hybrid"] },
+    appliesTo: { fuel: COMBUSTION },
     bundledWith: ["ENGINE_OIL"],
     active: true,
   },
@@ -98,6 +110,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "critical",
     whatItIs: "Conjunto que sincroniza o giro do virabrequim com o comando de válvulas.",
     whyItMatters: "Se romper, as válvulas batem nos pistões e o prejuízo vira motor novo.",
+    appliesTo: { fuel: COMBUSTION },
     bundledWith: ["WATER_PUMP", "ACCESSORY_BELT"],
     active: true,
   },
@@ -111,6 +124,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "high",
     whatItIs: "Alternativa metálica à correia dentada, com vida mais longa.",
     whyItMatters: "Esticada, adianta o ponto, faz barulho no motor frio e pode pular dente.",
+    appliesTo: { fuel: COMBUSTION },
     active: true,
   },
   {
@@ -123,6 +137,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "high",
     whatItIs: "Correia que aciona alternador, direção hidráulica e compressor do ar.",
     whyItMatters: "Se arrebentar, o carro para de carregar a bateria e a direção fica pesada.",
+    appliesTo: { fuel: COMBUSTION },
     bundledWith: ["TIMING_BELT_KIT"],
     active: true,
   },
@@ -136,6 +151,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "critical",
     whatItIs: "Bomba que circula o líquido de arrefecimento pelo motor e pelo radiador.",
     whyItMatters: "Travada ou vazando, o motor superaquece e empena o cabeçote.",
+    appliesTo: { fuel: COMBUSTION },
     bundledWith: ["TIMING_BELT_KIT", "COOLANT"],
     active: true,
   },
@@ -162,6 +178,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "low",
     whatItIs: "Limpeza da peça que dosa a entrada de ar no motor.",
     whyItMatters: "Com borra acumulada, a marcha lenta cai e o carro morre em semáforo.",
+    appliesTo: { fuel: COMBUSTION },
     active: true,
   },
   {
@@ -174,6 +191,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "low",
     whatItIs: "Válvula que devolve os gases do cárter para a admissão.",
     whyItMatters: "Entupida, pressuriza o motor e força vazamento pelos retentores.",
+    appliesTo: { fuel: COMBUSTION },
     active: true,
   },
   {
@@ -199,6 +217,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "medium",
     whatItIs: "Suportes de borracha que prendem o motor e absorvem a vibração.",
     whyItMatters: "Ressecados, transmitem trepidação para o volante e batem ao engatar marcha.",
+    appliesTo: { fuel: COMBUSTION },
     active: true,
   },
   {
@@ -211,6 +230,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "critical",
     whatItIs: "Líquido que troca calor com o motor e protege contra corrosão.",
     whyItMatters: "Velho, perde o aditivo, corrói por dentro e deixa o motor ferver.",
+    appliesTo: { fuel: COMBUSTION },
     bundledWith: ["WATER_PUMP", "RADIATOR_HOSES"],
     active: true,
   },
@@ -224,6 +244,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "medium",
     whatItIs: "Mangueiras que levam o líquido entre motor e radiador.",
     whyItMatters: "Ressecadas, estouram sem aviso e o motor superaquece em minutos.",
+    appliesTo: { fuel: COMBUSTION },
     bundledWith: ["COOLANT"],
     active: true,
   },
@@ -237,6 +258,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "medium",
     whatItIs: "Válvula que segura o líquido até o motor atingir a temperatura de trabalho.",
     whyItMatters: "Travada fechada, ferve o motor; travada aberta, ele nunca aquece e gasta mais.",
+    appliesTo: { fuel: COMBUSTION },
     active: true,
   },
   {
@@ -249,6 +271,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "low",
     whatItIs: "Tampa que mantém o sistema pressurizado na medida certa.",
     whyItMatters: "Com a mola fraca, o sistema perde pressão e o líquido evapora antes da hora.",
+    appliesTo: { fuel: COMBUSTION },
     active: true,
   },
   {
@@ -336,7 +359,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "high",
     whatItIs: "Lubrificante das engrenagens e sincronizadores do câmbio manual.",
     whyItMatters: "Degradado, endurece a troca de marchas e desgasta os sincronizadores.",
-    appliesTo: { transmission: ["manual"] },
+    appliesTo: { fuel: COMBUSTION, transmission: ["manual"] },
     active: true,
   },
   {
@@ -349,7 +372,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "high",
     whatItIs: "Fluido que lubrifica e aciona os comandos hidráulicos do câmbio automático.",
     whyItMatters: "Queimado, provoca trancos, patinação e a troca do câmbio custa mais que o carro vale.",
-    appliesTo: { transmission: ["automatic", "automated"] },
+    appliesTo: { fuel: COMBUSTION, transmission: ["automatic", "automated"] },
     active: true,
   },
   {
@@ -362,7 +385,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "high",
     whatItIs: "Fluido específico da transmissão continuamente variável.",
     whyItMatters: "É o item que mais mata CVT: fora do prazo, a correia patina e o câmbio se perde.",
-    appliesTo: { transmission: ["cvt"] },
+    appliesTo: { fuel: COMBUSTION, transmission: ["cvt"] },
     active: true,
   },
   {
@@ -375,7 +398,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "high",
     whatItIs: "Disco, platô e rolamento que ligam o motor ao câmbio.",
     whyItMatters: "Gasta, patina em subida e pode deixar o carro sem tração no meio do caminho.",
-    appliesTo: { transmission: ["manual", "automated"] },
+    appliesTo: { fuel: COMBUSTION, transmission: ["manual", "automated"] },
     active: true,
   },
   {
@@ -388,6 +411,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "medium",
     whatItIs: "Lubrificante das engrenagens que distribuem tração entre as rodas.",
     whyItMatters: "Sem lubrificação boa, o conjunto rosna e some com o dente da coroa.",
+    appliesTo: { fuel: COMBUSTION },
     active: true,
   },
   {
@@ -400,7 +424,10 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "medium",
     whatItIs: "Fluido que dá assistência hidráulica ao volante.",
     whyItMatters: "Velho ou no nível baixo, faz a direção pesar e a bomba roncar.",
-    appliesTo: { note: "Não se aplica a direção elétrica (EPS)." },
+    appliesTo: {
+      fuel: COMBUSTION,
+      note: "Não se aplica a direção elétrica (EPS).",
+    },
     active: true,
   },
   {
@@ -515,6 +542,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "medium",
     whatItIs: "Gerador que recarrega a bateria com o motor em funcionamento.",
     whyItMatters: "Fraco, a bateria descarrega andando e o carro apaga no trânsito.",
+    appliesTo: { fuel: COMBUSTION },
     bundledWith: ["ACCESSORY_BELT"],
     active: true,
   },
@@ -528,6 +556,7 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "low",
     whatItIs: "Motor elétrico que gira o virabrequim na partida.",
     whyItMatters: "Com escovas gastas, a partida falha justo quando você tem pressa.",
+    appliesTo: { fuel: COMBUSTION },
     active: true,
   },
   {
@@ -604,6 +633,98 @@ export const catalogItemsSeed: CatalogItemSeed[] = [
     criticality: "low",
     whatItIs: "Borrachas que limpam o para-brisa.",
     whyItMatters: "Ressecadas, borram o vidro na chuva e riscam o para-brisa.",
+    active: true,
+  },
+  {
+    code: "EV_BATTERY_COOLANT",
+    name: "Fluido de arrefecimento da bateria",
+    category: "cooling",
+    dueType: "both",
+    defaultIntervalKm: 60000,
+    defaultIntervalMonths: 48,
+    criticality: "critical",
+    whatItIs: "Líquido que controla a temperatura do pacote de baterias de tração e da eletrônica de potência.",
+    whyItMatters: "Bateria quente perde autonomia e envelhece rápido; o fluido velho deixa de dar conta da troca de calor.",
+    appliesTo: { fuel: ELECTRIFIED },
+    active: true,
+  },
+  {
+    code: "EV_TRACTION_BATTERY_CHECK",
+    name: "Diagnóstico da bateria de tração",
+    category: "electrical",
+    dueType: "inspection",
+    defaultIntervalKm: null,
+    defaultIntervalMonths: 12,
+    criticality: "critical",
+    whatItIs: "Leitura da saúde da bateria: capacidade restante, equilíbrio entre os módulos e histórico de falhas.",
+    whyItMatters: "É a peça mais cara do carro e a que define a autonomia; degradação fora do normal precisa aparecer enquanto a garantia vale.",
+    appliesTo: { fuel: ELECTRIFIED },
+    active: true,
+  },
+  {
+    code: "EV_HV_CABLES",
+    name: "Cabos e conectores de alta tensão",
+    category: "electrical",
+    dueType: "inspection",
+    defaultIntervalKm: null,
+    defaultIntervalMonths: 24,
+    criticality: "critical",
+    whatItIs: "Inspeção dos cabos laranja de alta tensão, conexões e isolamento entre bateria, inversor e motor.",
+    whyItMatters: "Isolamento comprometido é risco elétrico sério e costuma dar sintoma antes de virar pane.",
+    appliesTo: { fuel: ELECTRIFIED },
+    active: true,
+  },
+  {
+    code: "EV_CHARGING_CABLE",
+    name: "Cabo e tomada de recarga",
+    category: "electrical",
+    dueType: "inspection",
+    defaultIntervalKm: null,
+    defaultIntervalMonths: 12,
+    criticality: "medium",
+    whatItIs: "Verificação do cabo de recarga, dos pinos do conector e da trava da tomada do carro.",
+    whyItMatters: "Pino sujo ou oxidado esquenta, reduz a corrente aceita e pode danificar a porta de recarga.",
+    appliesTo: { fuel: ELECTRIFIED },
+    active: true,
+  },
+  {
+    code: "EV_REDUCTION_GEARBOX_OIL",
+    name: "Óleo da caixa de redução",
+    category: "transmission",
+    dueType: "both",
+    defaultIntervalKm: 60000,
+    defaultIntervalMonths: 60,
+    criticality: "high",
+    whatItIs: "Óleo da caixa de redução que liga o motor elétrico às rodas.",
+    whyItMatters: "É o único banho de óleo do trem de força elétrico; degradado, castiga engrenagem e rolamento.",
+    appliesTo: { fuel: ["electric"] },
+    active: true,
+  },
+  {
+    code: "EV_BRAKE_CALIPER_SERVICE",
+    name: "Limpeza e lubrificação das pinças de freio",
+    category: "brakes",
+    dueType: "time",
+    defaultIntervalKm: null,
+    defaultIntervalMonths: 24,
+    criticality: "high",
+    whatItIs: "Desmontagem, limpeza e lubrificação das pinças, com regulagem do curso das pastilhas.",
+    whyItMatters: "A frenagem regenerativa faz o freio mecânico trabalhar pouco, e pinça parada agarra, empena disco e come pastilha de um lado só.",
+    appliesTo: { fuel: ELECTRIFIED },
+    bundledWith: ["BRAKE_PADS_FRONT"],
+    active: true,
+  },
+  {
+    code: "HYBRID_BATTERY_FAN_FILTER",
+    name: "Filtro do ventilador da bateria híbrida",
+    category: "electrical",
+    dueType: "both",
+    defaultIntervalKm: 20000,
+    defaultIntervalMonths: 24,
+    criticality: "medium",
+    whatItIs: "Filtro do duto de ar que resfria a bateria híbrida, normalmente atrás do banco traseiro.",
+    whyItMatters: "Entupido, a bateria trabalha quente, perde rendimento e reduz a vida útil do pacote.",
+    appliesTo: { fuel: ["hybrid"] },
     active: true,
   },
 ];
