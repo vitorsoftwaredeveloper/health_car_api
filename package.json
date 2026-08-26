@@ -25,7 +25,8 @@
     "job:purge": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runPurgeExpired.ts",
     "test:integration": "jest --config jest.integration.config.js --runInBand",
     "test:all": "npm test && npm run test:integration",
-    "job:reminder": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runOdometerReminder.ts"
+    "job:reminder": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runOdometerReminder.ts",
+    "docs:check": "node scripts/docs-check.mjs"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.159",
