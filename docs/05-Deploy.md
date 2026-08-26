@@ -48,11 +48,19 @@ O truque do `DB` vale para todo segredo: em `local` o valor é literal, nos ambi
 
 ## Antes do primeiro deploy de um ambiente novo
 
-1. Criar o User Pool no Cognito, o app client e os grupos de papel.
-2. Gravar os parâmetros em `/health_car/<stage>/...` no SSM (banco, chave de criptografia, chaves VAPID).
-3. Gerar o par de chaves VAPID e usar a pública também no front.
-4. Preencher `config/<stage>.json` com os identificadores e os nomes dos parâmetros.
-5. Provisionar o cluster do Mongo com replicaSet — sem ele as transações falham.
+O passo 1 ao 3 estão no `scripts/aws/bootstrap-stage.sh`:
+
+```bash
+bash scripts/aws/bootstrap-stage.sh staging
+bash scripts/aws/bootstrap-stage.sh staging "mongodb+srv://..."
+```
+
+Ele cria o User Pool `health-car-<stage>`, o app client sem segredo (SRP + refresh, que é o que o Amplify usa), os grupos `owner` e `admin`, gera a chave de criptografia e o par VAPID, e grava tudo em `/health_car/<stage>/...`. É **idempotente**: rodar de novo atualiza os identificadores e **não regenera segredo já existente**. A URI do Mongo é o segundo argumento, opcional — sem ela o script avisa que `/health_car/<stage>/db` continua faltando. No fim ele imprime as variáveis `NEXT_PUBLIC_*` que o front daquele ambiente precisa.
+
+Fica de fora, porque não é AWS nem cabe em script:
+
+1. Provisionar o cluster do Mongo com replicaSet — sem ele as transações falham.
+2. Conferir `config/<stage>.json`, principalmente o `FRONTEND_URL`: é a única origem que o CORS libera, e o mesmo valor entra no CORS do bucket de anexos.
 
 Só então `npm run deploy:<stage>`.
 
