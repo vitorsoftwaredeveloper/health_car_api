@@ -12,6 +12,7 @@ import { VehicleDocument } from "../../types/vehicle";
 import { parseLocalDate } from "../../utils/date";
 import { httpError, STATUS_CODE } from "../../utils/errors";
 import { assertVehicleAccess } from "../vehicles/access.service";
+import { recalculateVehicle } from "./recalculate.service";
 
 export interface AddPlanItemPayload {
   catalogItemCode: string;
@@ -249,5 +250,10 @@ export const addCatalogItemToPlan = async (
       : null,
   });
 
-  return toPlanItemView(created.toObject() as PlanItemDocument);
+  const recalculation = await recalculateVehicle(vehicle);
+  const refreshed = recalculation.items.find(
+    (item) => String(item._id) === String(created._id),
+  );
+
+  return toPlanItemView((refreshed ?? created.toObject()) as PlanItemDocument);
 };

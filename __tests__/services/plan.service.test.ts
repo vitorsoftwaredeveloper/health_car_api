@@ -17,11 +17,15 @@ jest.mock("../../src/repositories/planTemplate.repository", () => ({
 jest.mock("../../src/services/vehicles/access.service", () => ({
   assertVehicleAccess: jest.fn(),
 }));
+jest.mock("../../src/services/plan/recalculate.service", () => ({
+  recalculateVehicle: jest.fn(),
+}));
 
 import { catalogItemRepository } from "../../src/repositories/catalogItem.repository";
 import { planItemRepository } from "../../src/repositories/planItem.repository";
 import { planTemplateRepository } from "../../src/repositories/planTemplate.repository";
 import { assertVehicleAccess } from "../../src/services/vehicles/access.service";
+import { recalculateVehicle } from "../../src/services/plan/recalculate.service";
 import {
   addCatalogItemToPlan,
   applyTemplateToVehicle,
@@ -197,8 +201,12 @@ describe("addCatalogItemToPlan", () => {
     (catalogItemRepository.findOne as jest.Mock).mockResolvedValue(catalog[0]);
     (planItemRepository.findOne as jest.Mock).mockResolvedValue(null);
     (planItemRepository.insertOne as jest.Mock).mockImplementation(
-      async (data: any) => ({ toObject: () => data }),
+      async (data: any) => ({ _id: data._id, toObject: () => data }),
     );
+    (recalculateVehicle as jest.Mock).mockResolvedValue({
+      healthScore: 88,
+      items: [],
+    });
   });
 
   it("normaliza o código e grava o item", async () => {
@@ -243,6 +251,28 @@ describe("addCatalogItemToPlan", () => {
     await expect(
       addCatalogItemToPlan(requester, String(vehicleId), { catalogItemCode: "NAO_EXISTE" }),
     ).rejects.toMatchObject({ statusCode: 404, code: "CATALOG_ITEM_NOT_FOUND" });
+  });
+
+  it("devolve o item já com o status recalculado", async () => {
+    (recalculateVehicle as jest.Mock).mockImplementation(async () => {
+      const created = (planItemRepository.insertOne as jest.Mock).mock.results[0]
+        .value;
+      const document = (await created).toObject();
+      return {
+        healthScore: 88,
+        items: [{ ...document, status: "ok", nextDueKm: 72000 }],
+      };
+    });
+
+    const view = await addCatalogItemToPlan(requester, String(vehicleId), {
+      catalogItemCode: "ENGINE_OIL",
+      lastServiceKm: 62000,
+      lastServiceDate: "2025-05-09",
+    });
+
+    expect(recalculateVehicle).toHaveBeenCalled();
+    expect(view.status).toBe("ok");
+    expect(view.nextDueKm).toBe(72000);
   });
 
   it("recusa item já presente no plano", async () => {
