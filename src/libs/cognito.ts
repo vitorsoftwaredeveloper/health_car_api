@@ -22,16 +22,16 @@ const userPoolId = (): string => process.env.USER_POOL_ID as string;
 
 export const isCognitoConfigured = (): boolean => !!process.env.USER_POOL_ID;
 
-export interface InvitedCognitoUser {
+export interface CreatedCognitoUser {
   cognitoSub: string;
   alreadyExisted: boolean;
 }
 
-export const inviteCognitoUser = async (
+export const createCognitoUser = async (
   email: string,
   name: string,
   role: Role,
-): Promise<InvitedCognitoUser> => {
+): Promise<CreatedCognitoUser> => {
   if (!isCognitoConfigured()) {
     return { cognitoSub: `local-${randomUUID()}`, alreadyExisted: false };
   }

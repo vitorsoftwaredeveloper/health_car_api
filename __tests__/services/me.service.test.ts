@@ -78,7 +78,7 @@ describe("getMe", () => {
     expect(view.user.phone).toBeNull();
   });
 
-  it("marca condutor como não proprietário", async () => {
+  it("marca usuário que não é dono da conta como não proprietário", async () => {
     (accountRepository.findById as jest.Mock).mockResolvedValue({
       ...account,
       ownerId: new Types.ObjectId(),
