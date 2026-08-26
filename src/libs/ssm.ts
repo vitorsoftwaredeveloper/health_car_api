@@ -1,11 +1,12 @@
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
+import { awsClientConfig } from "./awsConfig";
 
 let ssmClient: SSMClient | null = null;
 const parameterCache = new Map<string, string>();
 
 const createSsmClient = (): SSMClient => {
   if (!ssmClient) {
-    ssmClient = new SSMClient({ region: process.env.REGION });
+    ssmClient = new SSMClient(awsClientConfig());
   }
   return ssmClient;
 };

@@ -4,6 +4,10 @@
   "description": "HealthCar — API serverless (regra de negócio, motor de vencimento, acesso ao banco)",
   "license": "ISC",
   "scripts": {
+    "local:up": "docker compose up -d --wait",
+    "local:down": "docker compose down",
+    "local:reset": "docker compose down -v && docker compose up -d --wait && npm run seed",
+    "local:bootstrap": "npm run local:up && npm run seed",
     "dev": "nodemon",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:staging": "serverless deploy --stage staging",

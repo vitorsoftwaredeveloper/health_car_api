@@ -1,4 +1,5 @@
 import { SendMessageBatchCommand, SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
+import { awsClientConfig } from "./awsConfig";
 
 const MAX_BATCH_SIZE = 10;
 
@@ -6,7 +7,7 @@ let sqsClient: SQSClient | null = null;
 
 const createSqsClient = (): SQSClient => {
   if (!sqsClient) {
-    sqsClient = new SQSClient({ region: process.env.REGION });
+    sqsClient = new SQSClient(awsClientConfig());
   }
   return sqsClient;
 };

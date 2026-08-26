@@ -6,15 +6,14 @@ import {
   UsernameExistsException,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { randomUUID } from "crypto";
+import { awsClientConfig } from "./awsConfig";
 import { Role } from "../types/auth";
 
 let cognitoClient: CognitoIdentityProviderClient | null = null;
 
 const createCognitoClient = (): CognitoIdentityProviderClient => {
   if (!cognitoClient) {
-    cognitoClient = new CognitoIdentityProviderClient({
-      region: process.env.REGION,
-    });
+    cognitoClient = new CognitoIdentityProviderClient(awsClientConfig());
   }
   return cognitoClient;
 };

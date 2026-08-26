@@ -5,6 +5,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3ClientConfig } from "./awsConfig";
 
 const UPLOAD_URL_TTL_SECONDS = 300;
 const DOWNLOAD_URL_TTL_SECONDS = 300;
@@ -13,7 +14,7 @@ let s3Client: S3Client | null = null;
 
 const createS3Client = (): S3Client => {
   if (!s3Client) {
-    s3Client = new S3Client({ region: process.env.REGION });
+    s3Client = new S3Client(s3ClientConfig());
   }
   return s3Client;
 };
