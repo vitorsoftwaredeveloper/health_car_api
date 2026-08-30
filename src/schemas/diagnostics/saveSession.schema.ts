@@ -101,6 +101,23 @@ export const saveSessionSchema = {
       maximum: 1000000,
       nullable: true,
     },
+    tripStats: {
+      type: "object",
+      nullable: true,
+      additionalProperties: false,
+      properties: {
+        distanceKm: { type: "number", minimum: 0, maximum: 5000 },
+        averageSpeedKmh: { type: "number", minimum: 0, maximum: 400 },
+        movingSeconds: { type: "integer", minimum: 0, maximum: 200000 },
+        idleRatio: { type: "number", minimum: 0, maximum: 1 },
+      },
+      required: [
+        "distanceKm",
+        "averageSpeedKmh",
+        "movingSeconds",
+        "idleRatio",
+      ],
+    },
     findings: {
       type: "array",
       maxItems: 40,

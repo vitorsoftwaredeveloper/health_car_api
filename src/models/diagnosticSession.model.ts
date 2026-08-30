@@ -55,6 +55,19 @@ export const diagnosticSessionSchema = new Schema<DiagnosticSessionDocument>(
       },
     ],
     sampleCount: { type: Number, default: 0 },
+    tripStats: {
+      _id: false,
+      type: new Schema(
+        {
+          distanceKm: { type: Number, required: true },
+          averageSpeedKmh: { type: Number, required: true },
+          movingSeconds: { type: Number, required: true },
+          idleRatio: { type: Number, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
     createdBy: { type: Schema.Types.ObjectId, ref: "users", required: true },
   },
   {

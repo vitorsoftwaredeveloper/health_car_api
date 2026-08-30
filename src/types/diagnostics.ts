@@ -32,6 +32,13 @@ export interface DiagnosticTripSummary {
   samples: number;
 }
 
+export interface DiagnosticTrip {
+  distanceKm: number;
+  averageSpeedKmh: number;
+  movingSeconds: number;
+  idleRatio: number;
+}
+
 export interface DiagnosticSessionDocument {
   _id?: Types.ObjectId;
   accountId: Types.ObjectId;
@@ -53,6 +60,7 @@ export interface DiagnosticSessionDocument {
   readings: DiagnosticReading[];
   trip: DiagnosticTripSummary[];
   sampleCount: number;
+  tripStats: DiagnosticTrip | null;
   createdBy: Types.ObjectId;
   createdAt?: Date;
 }
