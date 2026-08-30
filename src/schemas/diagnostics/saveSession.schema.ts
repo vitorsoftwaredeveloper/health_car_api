@@ -118,6 +118,21 @@ export const saveSessionSchema = {
         "idleRatio",
       ],
     },
+    modules: {
+      type: "array",
+      nullable: true,
+      maxItems: 30,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          address: { type: "string", maxLength: 8 },
+          codes: { type: "array", maxItems: 30, items: { type: "string", maxLength: 8 } },
+          identified: { type: "boolean" },
+        },
+        required: ["address", "codes", "identified"],
+      },
+    },
     findings: {
       type: "array",
       maxItems: 40,

@@ -55,6 +55,14 @@ export const diagnosticSessionSchema = new Schema<DiagnosticSessionDocument>(
       },
     ],
     sampleCount: { type: Number, default: 0 },
+    modules: [
+      {
+        _id: false,
+        address: { type: String, required: true },
+        codes: { type: [String], default: [] },
+        identified: { type: Boolean, default: false },
+      },
+    ],
     tripStats: {
       _id: false,
       type: new Schema(

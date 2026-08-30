@@ -15,6 +15,7 @@ import {
   DiagnosticChecklistDocument,
   DiagnosticMonitor,
   DiagnosticReading,
+  DiagnosticModule,
   DiagnosticSessionDocument,
   DiagnosticTrip,
   DiagnosticTripSummary,
@@ -60,6 +61,7 @@ export interface SaveDiagnosticSessionPayload {
   trip?: DiagnosticTripSummary[];
   sampleCount?: number;
   tripStats?: DiagnosticTrip | null;
+  modules?: DiagnosticModule[];
   findings: ChecklistFinding[];
 }
 
@@ -93,6 +95,7 @@ export interface DiagnosticSessionView {
   trip: DiagnosticTripSummary[];
   sampleCount: number;
   tripStats: DiagnosticTrip | null;
+  modules: DiagnosticModule[];
   createdAt: Date | null;
 }
 
@@ -133,6 +136,7 @@ const toSessionView = (
   trip: session.trip ?? [],
   sampleCount: session.sampleCount ?? 0,
   tripStats: session.tripStats ?? null,
+  modules: session.modules ?? [],
   createdAt: session.createdAt ?? null,
 });
 
@@ -193,6 +197,7 @@ export const saveDiagnosticSession = async (
     trip: payload.trip ?? [],
     sampleCount: payload.sampleCount ?? 0,
     tripStats: payload.tripStats ?? null,
+    modules: payload.modules ?? [],
     createdBy: requester.userId,
   });
 

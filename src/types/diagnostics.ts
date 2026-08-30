@@ -39,6 +39,12 @@ export interface DiagnosticTrip {
   idleRatio: number;
 }
 
+export interface DiagnosticModule {
+  address: string;
+  codes: string[];
+  identified: boolean;
+}
+
 export interface DiagnosticSessionDocument {
   _id?: Types.ObjectId;
   accountId: Types.ObjectId;
@@ -61,6 +67,7 @@ export interface DiagnosticSessionDocument {
   trip: DiagnosticTripSummary[];
   sampleCount: number;
   tripStats: DiagnosticTrip | null;
+  modules: DiagnosticModule[];
   createdBy: Types.ObjectId;
   createdAt?: Date;
 }
