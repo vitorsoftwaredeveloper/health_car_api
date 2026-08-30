@@ -1,0 +1,59 @@
+saveDiagnosticSession:
+  handler: src/handlers/diagnostics/saveSession.execute
+  description: Guarda a leitura do scanner e atualiza as pendências do veículo
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/diagnostics/sessions
+        authorizer:
+          name: cognitoJwt
+
+listDiagnosticSessions:
+  handler: src/handlers/diagnostics/listSessions.execute
+  description: Histórico de leituras do scanner
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/diagnostics/sessions
+        authorizer:
+          name: cognitoJwt
+
+readDiagnosticSession:
+  handler: src/handlers/diagnostics/readSession.execute
+  description: Uma leitura do histórico
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/diagnostics/sessions/{sessionId}
+        authorizer:
+          name: cognitoJwt
+
+readDiagnosticChecklist:
+  handler: src/handlers/diagnostics/readChecklist.execute
+  description: Pendências abertas e validadas do veículo
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/diagnostics/checklist
+        authorizer:
+          name: cognitoJwt
+
+updateDiagnosticChecklistItem:
+  handler: src/handlers/diagnostics/updateChecklistItem.execute
+  description: Marca ou reabre uma pendência
+  events:
+    - httpApi:
+        method: PATCH
+        path: /v1/vehicles/{vehicleId}/diagnostics/checklist/{code}
+        authorizer:
+          name: cognitoJwt
+
+removeDiagnosticChecklistItem:
+  handler: src/handlers/diagnostics/removeChecklistItem.execute
+  description: Apaga uma pendência da lista
+  events:
+    - httpApi:
+        method: DELETE
+        path: /v1/vehicles/{vehicleId}/diagnostics/checklist/{code}
+        authorizer:
+          name: cognitoJwt
