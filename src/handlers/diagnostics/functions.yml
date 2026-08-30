@@ -57,3 +57,23 @@ removeDiagnosticChecklistItem:
         path: /v1/vehicles/{vehicleId}/diagnostics/checklist/{code}
         authorizer:
           name: cognitoJwt
+
+readDiagnosticCode:
+  handler: src/handlers/diagnostics/readCode.execute
+  description: Verbete do dicionário de falhas
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/diagnostic-codes/{code}
+        authorizer:
+          name: cognitoJwt
+
+readDiagnosticCodes:
+  handler: src/handlers/diagnostics/readCode.execute
+  description: Vários verbetes numa chamada
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/diagnostic-codes
+        authorizer:
+          name: cognitoJwt

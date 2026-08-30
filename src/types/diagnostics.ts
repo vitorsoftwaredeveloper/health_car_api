@@ -90,3 +90,19 @@ export interface ChecklistFinding {
   why: string;
   priority: ChecklistPriority;
 }
+
+export type DiagnosticSeverity = "stop" | "soon" | "watch";
+
+export interface DiagnosticCodeDocument {
+  _id?: Types.ObjectId;
+  code: string;
+  title: string;
+  explanation: string;
+  severity: DiagnosticSeverity;
+  drivable: boolean;
+  likelyCauses: string[];
+  catalogItemCode: string | null;
+  active: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
