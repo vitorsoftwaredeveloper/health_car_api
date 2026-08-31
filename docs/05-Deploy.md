@@ -42,9 +42,19 @@ O truque do `DB` vale para todo segredo: em `local` o valor é literal, nos ambi
 
 `serverless-iam-roles-per-function` dá a cada Lambda apenas o que ela declara no próprio `functions.yml`. O papel do provider carrega só o mínimo comum — leitura de parâmetro em `/health_car/*`. Função que precisa de S3 ou SQS pede na própria entrada; não adicione permissão no provider para resolver caso isolado.
 
+## Índices
+
+`syncIndexes` **não roda dentro da requisição**. Ele era chamado na primeira conexão de cada container e custava 1,7 s de latência em toda invocação fria, além de rodar construção de índice no meio de um request. Agora é passo de deploy:
+
+```bash
+DB="<uri>" npm run migrate:indexes
+```
+
+O runtime só sincroniza se `SYNC_INDEXES=true` estiver no ambiente, o que serve para desenvolvimento local. Rode a migração depois de qualquer deploy que crie coleção ou índice novo.
+
 ## Empacotamento
 
-`package.individually` com `serverless-esbuild`: cada função vira um bundle próprio, o que mantém o cold start baixo. `serverless-prune-plugin` guarda as três últimas versões e apaga o resto. Arquitetura `arm64`, runtime Node 24, timeout padrão de 29s — jobs pedem timeout maior na própria entrada.
+`package.individually` com `serverless-esbuild`: cada função vira um bundle próprio, o que mantém o cold start baixo. `serverless-prune-plugin` guarda as três últimas versões e apaga o resto. Arquitetura `arm64`, runtime Node 24, 1024 MB de memória (CPU da Lambda escala junto, e o gargalo aqui é CPU, não RAM), timeout padrão de 29s — jobs pedem timeout maior na própria entrada.
 
 ## Antes do primeiro deploy de um ambiente novo
 

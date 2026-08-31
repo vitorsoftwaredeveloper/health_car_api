@@ -19,6 +19,7 @@
     "migrate": "ts-node --compiler-options '{\"module\":\"CommonJS\"}'",
     "seed:catalog": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seeds/catalogItems.seed.ts",
     "seed:templates": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seeds/planTemplates.seed.ts",
+    "migrate:indexes": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/migrations/syncIndexes.ts",
     "seed:codes": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seeds/diagnosticCodes.seed.ts",
     "seed": "npm run seed:catalog && npm run seed:templates && npm run seed:codes",
     "job:recalculate": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/jobs/runRecalculateHealth.ts",

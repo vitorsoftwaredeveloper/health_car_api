@@ -180,34 +180,33 @@ export const saveDiagnosticSession = async (
     );
   }
 
-  const created = await diagnosticSessionRepository.insertOne({
-    accountId: vehicle.accountId,
-    vehicleId: vehicle._id,
-    startedAt,
-    deviceName: payload.deviceName,
-    adapterIdentity: payload.adapterIdentity ?? null,
-    protocol: payload.protocol ?? null,
-    voltage: payload.voltage ?? null,
-    malfunctionLightOn: payload.malfunctionLightOn ?? null,
-    storedCodes: payload.storedCodes ?? null,
-    troubleCodes: payload.troubleCodes,
-    monitors: payload.monitors,
-    supportedPids: payload.supportedPids,
-    readings: payload.readings,
-    trip: payload.trip ?? [],
-    sampleCount: payload.sampleCount ?? 0,
-    tripStats: payload.tripStats ?? null,
-    modules: payload.modules ?? [],
-    createdBy: requester.userId,
-  });
+  const [created, storedItems] = await Promise.all([
+    diagnosticSessionRepository.insertOne({
+      accountId: vehicle.accountId,
+      vehicleId: vehicle._id,
+      startedAt,
+      deviceName: payload.deviceName,
+      adapterIdentity: payload.adapterIdentity ?? null,
+      protocol: payload.protocol ?? null,
+      voltage: payload.voltage ?? null,
+      malfunctionLightOn: payload.malfunctionLightOn ?? null,
+      storedCodes: payload.storedCodes ?? null,
+      troubleCodes: payload.troubleCodes,
+      monitors: payload.monitors,
+      supportedPids: payload.supportedPids,
+      readings: payload.readings,
+      trip: payload.trip ?? [],
+      sampleCount: payload.sampleCount ?? 0,
+      tripStats: payload.tripStats ?? null,
+      modules: payload.modules ?? [],
+      createdBy: requester.userId,
+    }),
+    loadChecklist(vehicle.accountId, vehicle._id as Types.ObjectId),
+  ]);
 
   const session = created.toObject() as DiagnosticSessionDocument;
 
-  const merged = mergeFindings(
-    await loadChecklist(vehicle.accountId, vehicle._id as Types.ObjectId),
-    payload.findings,
-    startedAt,
-  );
+  const merged = mergeFindings(storedItems, payload.findings, startedAt);
 
   await persistChecklist(
     vehicle.accountId,

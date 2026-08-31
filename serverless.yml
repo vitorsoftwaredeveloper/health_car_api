@@ -25,7 +25,7 @@ provider:
   runtime: nodejs24.x
   stage: ${opt:stage, 'dev'}
   region: ${self:custom.config.environment.REGION}
-  memorySize: 512
+  memorySize: 1024
   timeout: 29
   logRetentionInDays: 30
   versionFunctions: false

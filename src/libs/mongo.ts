@@ -14,7 +14,9 @@ const resolveConnectionString = async (): Promise<string> => {
   return getSsmParameter(dbEnv);
 };
 
-const syncIndexes = async (conn: typeof mongoose): Promise<void> => {
+const shouldSyncIndexes = (): boolean => process.env.SYNC_INDEXES === "true";
+
+export const syncIndexes = async (conn: typeof mongoose): Promise<void> => {
   if (indexesSynced) return;
   indexesSynced = true;
 
@@ -43,7 +45,7 @@ export const db = async (): Promise<typeof mongoose | undefined> => {
     const connectionString = await resolveConnectionString();
     connection = await mongoose.connect(connectionString);
     console.log("connection database successful");
-    await syncIndexes(connection);
+    if (shouldSyncIndexes()) await syncIndexes(connection);
     return connection;
   } catch (err) {
     console.log("connection database error", err);
