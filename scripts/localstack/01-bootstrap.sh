@@ -36,10 +36,4 @@ awslocal ssm put-parameter --name /health_car/local/db --type SecureString \
 awslocal ssm put-parameter --name /health_car/local/encryption_key --type SecureString \
   --value "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" --overwrite
 
-awslocal ssm put-parameter --name /health_car/local/vapid_public_key --type SecureString \
-  --value "BIm2xujGnzpaJ6xTD_Y--Nad04Ryx5zBBp8Z-DsStB4tFq3K0og7AoTzBrbna-_HW2HabBY2AFmgv7xnNho52c8" --overwrite
-
-awslocal ssm put-parameter --name /health_car/local/vapid_private_key --type SecureString \
-  --value "ZL7d9EmZY3LLI8-ij6OoShQM_1yrWhWDtimXj0hK9pc" --overwrite
-
 echo "localstack bootstrap concluido"

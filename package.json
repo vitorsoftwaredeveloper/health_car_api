@@ -4,9 +4,10 @@
   "description": "HealthCar — API serverless (regra de negócio, motor de vencimento, acesso ao banco)",
   "license": "ISC",
   "scripts": {
-    "local:up": "docker compose up -d --wait",
+    "local:up": "docker compose up -d --wait && npm run local:vapid",
+    "local:vapid": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/localVapid.ts",
     "local:down": "docker compose down",
-    "local:reset": "docker compose down -v && docker compose up -d --wait && npm run seed",
+    "local:reset": "docker compose down -v && npm run local:up && npm run seed",
     "local:bootstrap": "npm run local:up && npm run seed",
     "dev": "nodemon",
     "deploy:dev": "serverless deploy --stage dev",

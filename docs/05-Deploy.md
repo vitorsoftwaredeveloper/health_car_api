@@ -28,7 +28,7 @@ Não existe `remove:dev` de propósito — dev é o ambiente que todo mundo usa 
 | `FRONTEND_URL` | origem liberada no CORS |
 | `VAPID_*` | credenciais do Web Push |
 
-O truque do `DB` vale para todo segredo: em `local` o valor é literal, nos ambientes de verdade é o **nome** de um parâmetro `SecureString` em `/health_car/<stage>/...`, que `src/libs/ssm.ts` resolve na primeira invocação e mantém em cache. Segredo não entra no repositório.
+O truque do `DB` vale para todo segredo: nos ambientes de verdade o valor é o **nome** de um parâmetro `SecureString` em `/health_car/<stage>/...`, que `src/libs/ssm.ts` resolve na primeira invocação e mantém em cache. Em `local` o valor é literal quando não é segredo de verdade, e o par VAPID segue o mesmo caminho do SSM contra o LocalStack — ver [`02-Ambiente-Local.md`](./02-Ambiente-Local.md). Segredo não entra no repositório.
 
 ## Recursos criados pelo deploy
 

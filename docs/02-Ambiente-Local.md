@@ -14,9 +14,9 @@ npm run dev         # nodemon + serverless-offline em http://localhost:4000
 
 | Script | O que faz |
 | --- | --- |
-| `local:up` | `docker compose up -d --wait` — só volta quando os healthchecks passam |
+| `local:up` | `docker compose up -d --wait` — só volta quando os healthchecks passam, e em seguida garante o par VAPID local |
 | `local:down` | para os containers, preserva os volumes |
-| `local:reset` | derruba **com volumes**, sobe de novo e semeia — banco zerado |
+| `local:reset` | derruba **com volumes**, sobe de novo e semeia — banco zerado, par VAPID novo |
 | `local:bootstrap` | `local:up` seguido de `seed` |
 
 ## O que sobe no docker
@@ -32,7 +32,20 @@ O provisionamento do LocalStack roda a cada `up`, pelo `ready.d`, em [`../script
 
 - bucket de anexos com CORS liberado para o front local, porque o navegador faz `PUT` direto na URL pré-assinada;
 - fila de notificações com DLQ;
-- parâmetros `/health_car/local/*` no SSM (banco, chave de criptografia, chaves VAPID).
+- parâmetros `/health_car/local/*` no SSM (banco e chave de criptografia).
+
+## Chaves VAPID do ambiente local
+
+Segredo não entra no repositório, nem o de brincadeira: `config/local.json` guarda o **nome** do parâmetro (`/health_car/local/vapid_public_key`), igual aos outros ambientes, e [`../src/libs/webpush.ts`](../src/libs/webpush.ts) resolve pelo SSM do LocalStack.
+
+Quem cria o par é [`../scripts/localVapid.ts`](../scripts/localVapid.ts), que o `local:up` chama depois do docker. Ele é idempotente: se o parâmetro já existe, mantém. No fim imprime a variável que o front local precisa:
+
+```bash
+npm run local:vapid
+# NEXT_PUBLIC_VAPID_PUBLIC_KEY=BP...
+```
+
+O LocalStack sobe com `PERSISTENCE=0`, então cada `local:reset` gera um par novo — e as inscrições de push gravadas no banco antigo morrem junto. Se o push local parar de sair depois de um reset, é isso: pegue a chave nova, atualize o `.env` do front e assine de novo.
 
 ## Como os clientes AWS acham o LocalStack
 
