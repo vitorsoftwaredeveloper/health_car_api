@@ -1,5 +1,6 @@
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 import { awsClientConfig } from "./awsConfig";
+import { log } from "./logger";
 
 let ssmClient: SSMClient | null = null;
 const parameterCache = new Map<string, string>();
@@ -12,13 +13,8 @@ const createSsmClient = (): SSMClient => {
 };
 
 export const getSsmParameter = async (name: string): Promise<string> => {
-  console.log("IN - getSsmParameter");
-
   const cached = parameterCache.get(name);
-  if (cached) {
-    console.log("ssm parameter reused");
-    return cached;
-  }
+  if (cached) return cached;
 
   const { Parameter } = await createSsmClient().send(
     new GetParameterCommand({ Name: name, WithDecryption: true })
@@ -30,6 +26,6 @@ export const getSsmParameter = async (name: string): Promise<string> => {
   }
 
   parameterCache.set(name, value);
-  console.log("OUT - getSsmParameter");
+  log.debug("ssm.parameter.loaded", { name });
   return value;
 };

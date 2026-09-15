@@ -2,6 +2,7 @@ import { deleteObject } from "../../libs/s3";
 import { attachmentRepository } from "../../repositories/attachment.repository";
 import { maintenanceEventRepository } from "../../repositories/maintenanceEvent.repository";
 import { AttachmentDocument } from "../../types/maintenance";
+import { describeError, log } from "../../libs/logger";
 
 const PAGE_SIZE = 100;
 
@@ -37,9 +38,9 @@ export const runPurgeExpired = async (
       removable.push(attachment._id);
     } catch (error: any) {
       result.objectFailures += 1;
-      console.error("attachment object removal failed", {
+      log.error("job.attachment.removal.failed", {
         attachmentId: String(attachment._id),
-        message: error?.message,
+        ...describeError(error),
       });
     }
   }

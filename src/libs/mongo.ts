@@ -1,4 +1,5 @@
 import mongoose, { ClientSession } from "mongoose";
+import { describeError, log } from "./logger";
 import { getSsmParameter } from "./ssm";
 
 let connection: typeof mongoose | null = null;
@@ -24,12 +25,11 @@ export const syncIndexes = async (conn: typeof mongoose): Promise<void> => {
   for (const model of models) {
     try {
       await model.syncIndexes();
-      console.log("indexes synced", { model: model.modelName });
+      log.info("db.indexes.synced", { model: model.modelName });
     } catch (err: any) {
-      console.error("index sync failed", {
+      log.error("db.indexes.failed", {
         model: model.modelName,
-        message: err?.message,
-        code: err?.code,
+        ...describeError(err),
       });
     }
   }
@@ -37,18 +37,15 @@ export const syncIndexes = async (conn: typeof mongoose): Promise<void> => {
 
 export const db = async (): Promise<typeof mongoose | undefined> => {
   try {
-    if (connection) {
-      console.log("db connection reused");
-      return connection;
-    }
+    if (connection) return connection;
 
     const connectionString = await resolveConnectionString();
     connection = await mongoose.connect(connectionString);
-    console.log("connection database successful");
+    log.info("db.connected");
     if (shouldSyncIndexes()) await syncIndexes(connection);
     return connection;
   } catch (err) {
-    console.log("connection database error", err);
+    log.error("db.connection.failed", describeError(err));
     throw err;
   }
 };

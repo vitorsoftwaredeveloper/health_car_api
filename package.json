@@ -13,6 +13,8 @@
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:prod": "serverless deploy --stage prod",
+    "logs": "serverless logs --stage prod -f",
+    "logs:errors": "bash scripts/aws/errors.sh",
     "remove:staging": "serverless remove --stage staging",
     "remove:prod": "serverless remove --stage prod",
     "test": "jest --coverage",

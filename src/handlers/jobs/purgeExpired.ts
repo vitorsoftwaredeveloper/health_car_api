@@ -1,7 +1,8 @@
 import { ScheduledHandler } from "aws-lambda";
+import { withJobLogging } from "../../middlewares/jobHandler";
 import { runPurgeExpired } from "../../services/purge/purge.service";
 
-export const execute: ScheduledHandler = async () => {
-  const result = await runPurgeExpired();
-  console.log("purgeExpiredJob finished", result);
-};
+export const execute: ScheduledHandler = withJobLogging(
+  "purgeExpiredJob",
+  () => runPurgeExpired(),
+);

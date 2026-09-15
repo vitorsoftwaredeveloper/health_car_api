@@ -5,6 +5,7 @@ import { alertRepository } from "../../repositories/alert.repository";
 import { attachmentRepository } from "../../repositories/attachment.repository";
 import { maintenanceEventRepository } from "../../repositories/maintenanceEvent.repository";
 import { notificationRepository } from "../../repositories/notification.repository";
+import { fuelEntryRepository } from "../../repositories/fuelEntry.repository";
 import { odometerReadingRepository } from "../../repositories/odometerReading.repository";
 import { planItemRepository } from "../../repositories/planItem.repository";
 import { pushDeviceRepository } from "../../repositories/pushDevice.repository";
@@ -12,6 +13,7 @@ import { userRepository } from "../../repositories/user.repository";
 import { vehicleRepository } from "../../repositories/vehicle.repository";
 import { AttachmentDocument } from "../../types/maintenance";
 import { AccountDocument, UserDocument } from "../../types/user";
+import { describeError, log } from "../../libs/logger";
 
 const PAGE_SIZE = 20;
 
@@ -41,9 +43,9 @@ const removeAccountData = async (
       result.objectsRemoved += 1;
     } catch (error: any) {
       result.objectFailures += 1;
-      console.error("attachment object removal failed", {
+      log.error("job.attachment.removal.failed", {
         attachmentId: String(attachment._id),
-        message: error?.message,
+        ...describeError(error),
       });
     }
   }
@@ -56,6 +58,7 @@ const removeAccountData = async (
   await maintenanceEventRepository.deleteMany(scope);
   await planItemRepository.deleteMany(scope);
   await odometerReadingRepository.deleteMany(scope);
+  await fuelEntryRepository.deleteMany(scope);
   await alertRepository.deleteMany(scope);
   await notificationRepository.deleteMany(scope);
   await vehicleRepository.deleteMany(scope);
@@ -125,9 +128,9 @@ export const runAnonymizeAccounts = async (
       result.accountsAnonymized += 1;
     } catch (error: any) {
       result.failures += 1;
-      console.error("account anonymization failed", {
+      log.error("job.account.anonymization.failed", {
         accountId: String(accountId),
-        message: error?.message,
+        ...describeError(error),
       });
     }
   }

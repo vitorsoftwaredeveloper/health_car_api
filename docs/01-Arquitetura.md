@@ -34,15 +34,15 @@ Cada seta é uma dependência de mão única. `service` nunca importa `handler`;
 ```
 src/
 ├── handlers/      1 arquivo por operação + functions.yml por domínio
-├── middlewares/   auth · roleGuard · validate · errorHandler
-├── services/      regra por domínio (vehicles, plan, odometer, alerts,
+├── middlewares/   auth · roleGuard · validate · errorHandler · jobHandler
+├── services/      regra por domínio (vehicles, plan, odometer, fuel, alerts,
 │                  maintenance, notifications, users, purge, catalog, jobs)
 ├── repositories/  1 por coleção, todos criados por base.ts
 ├── models/        schemas do Mongoose
 ├── schemas/       JSONSchemaType do ajv, espelhando o payload de cada rota
-├── domain/        due · health · alerts · odometer · money · planItem ·
+├── domain/        due · health · alerts · odometer · fuel · money · planItem ·
 │                  planTemplate · notification · preferences · plate · retention
-├── libs/          mongo · ssm · s3 · sqs · cognito · webpush · crypto · awsConfig
+├── libs/          mongo · ssm · s3 · sqs · cognito · webpush · crypto · awsConfig · logger
 ├── types/         tipos compartilhados entre camadas
 └── utils/         date · errors · http
 ```
@@ -99,7 +99,22 @@ Os jobs vivem em `src/handlers/jobs` e são declarados em `src/handlers/jobs/fun
 | `purgeExpiredJob` | limpa o que passou da retenção |
 | `anonymizeAccountsJob` | anonimiza conta que cumpriu o prazo de exclusão |
 
+Todo job passa por `withJobLogging`, em `src/middlewares/jobHandler.ts`: ele registra `job.started`, `job.finished` com o resultado e a duração, e `job.failed` com a pilha antes de relançar o erro — relançar é o que faz a Lambda contar a falha e a EventBridge tentar de novo.
+
 Local não tem gatilho: rode na mão pelos scripts de `scripts/jobs` (ver [02-Ambiente-Local.md](./02-Ambiente-Local.md)).
+
+## Logs
+
+Nada escreve `console.log` direto. `src/libs/logger.ts` emite uma linha JSON por evento — `{ level, event, ...contexto, ...campos }` — e `withErrorHandling` prende ao contexto o `requestId`, a rota, o método e o `sub` do token, de modo que toda linha daquela invocação sai etiquetada sem que o service precise saber de HTTP.
+
+| Evento | Quando | Nível |
+| --- | --- | --- |
+| `request.completed` | handler devolveu resposta | `info`, com `statusCode` e `durationMs` |
+| `request.failed` | handler lançou erro | `warn` para 4xx, `error` para 5xx (só aí vai `stack`) |
+| `job.started` · `job.finished` · `job.failed` | ciclo de um job | `info` / `info` / `error` |
+| `db.connected` · `db.connection.failed` | conexão do Mongo | `info` / `error` |
+
+`LOG_LEVEL` (`debug` · `info` · `warn` · `error`, padrão `info`) corta o que sai. Como cada linha é JSON, o Logs Insights do CloudWatch indexa os campos sozinho: `filter event = "request.failed" and statusCode >= 500` funciona sem `parse`. Como ler em produção está em [05-Deploy.md](./05-Deploy.md#logs).
 
 ## Conexão com o banco
 

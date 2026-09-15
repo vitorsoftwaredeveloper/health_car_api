@@ -77,5 +77,33 @@ Só então `npm run deploy:<stage>`.
 ## Depois do deploy
 
 - `GET /v1/status` responde sem tocar no banco: serve de sonda rápida.
-- A primeira invocação de cada função sincroniza os índices do Mongo; se o log mostrar `index sync failed`, o índice existente diverge do model e precisa ser resolvido à mão.
+- Rode `migrate:indexes` se o deploy trouxe coleção ou índice novo; se o log mostrar `db.indexes.failed`, o índice existente diverge do model e precisa ser resolvido à mão.
 - Log fica 30 dias (`logRetentionInDays`).
+
+## Logs
+
+Cada função tem o próprio grupo em `/aws/lambda/health-car-api-<stage>-<função>`. O formato das linhas está em [01-Arquitetura.md](./01-Arquitetura.md#logs).
+
+```bash
+npm run logs -- getVehicleHealth -t          # segue uma função em prod
+npm run logs -- saveDiagnosticSession --startTime 2h
+npm run logs:errors                          # falhas de todas as funções nas últimas 24h (prod)
+npm run logs:errors -- prod 72               # outro stage ou outra janela, em horas
+```
+
+`logs:errors` roda [`scripts/aws/errors.sh`](../scripts/aws/errors.sh): varre todo grupo com dado, filtra `request.failed`, `job.failed`, tempo esgotado e erro de invocação, e imprime hora e carga de cada um. Serve para a pergunta "quebrou alguma coisa desde ontem?" sem abrir o console.
+
+Para cruzar funções ou agregar, o Logs Insights lê os campos direto do JSON:
+
+```
+fields @timestamp, route, statusCode, durationMs, code, message
+| filter event = "request.failed" and statusCode >= 500
+| sort @timestamp desc
+```
+
+```
+fields @timestamp, job, durationMs, result.failures
+| filter event = "job.finished" or event = "job.failed"
+```
+
+O que o log **não** tem, de propósito: corpo de requisição, placa, chassi e e-mail. O `sub` do Cognito identifica o requisitante sem expor dado pessoal.

@@ -4,6 +4,7 @@ import { vehicleRepository } from "../../repositories/vehicle.repository";
 import { VehicleDocument } from "../../types/vehicle";
 import { syncAlertsForVehicle } from "../alerts/alert.service";
 import { recalculateVehicle } from "../plan/recalculate.service";
+import { describeError, log } from "../../libs/logger";
 
 const PAGE_SIZE = 50;
 
@@ -71,9 +72,9 @@ export const runRecalculateHealth =
           }
         } catch (error: any) {
           result.failures += 1;
-          console.error("vehicle recalculation failed", {
+          log.error("job.vehicle.failed", {
             vehicleId: String(vehicle._id),
-            message: error?.message,
+            ...describeError(error),
           });
         }
       }

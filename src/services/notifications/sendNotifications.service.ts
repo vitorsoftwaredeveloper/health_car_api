@@ -24,6 +24,7 @@ import { UserDocument } from "../../types/user";
 import { VehicleDocument } from "../../types/vehicle";
 import { addDays, today } from "../../utils/date";
 import { defaultPreferences } from "../../domain/preferences";
+import { describeError, log } from "../../libs/logger";
 
 export interface NotificationJobMessage {
   accountId: string;
@@ -313,7 +314,7 @@ export const runSendNotifications = async (
       await processMessage(JSON.parse(record.body), result);
     } catch (error: any) {
       result.failed += 1;
-      console.error("notification message failed", { message: error?.message });
+      log.error("job.notification.failed", describeError(error));
     }
   }
 
