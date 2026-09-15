@@ -22,6 +22,9 @@ jest.mock("../../src/repositories/planItem.repository", () => ({
 jest.mock("../../src/repositories/odometerReading.repository", () => ({
   odometerReadingRepository: { deleteMany: jest.fn() },
 }));
+jest.mock("../../src/repositories/fuelEntry.repository", () => ({
+  fuelEntryRepository: { deleteMany: jest.fn() },
+}));
 jest.mock("../../src/repositories/maintenanceEvent.repository", () => ({
   maintenanceEventRepository: { deleteMany: jest.fn() },
 }));

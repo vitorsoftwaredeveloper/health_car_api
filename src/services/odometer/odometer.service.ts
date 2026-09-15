@@ -61,7 +61,7 @@ const toReadingView = (
 const parseDate = (value?: string): Date =>
   value ? parseLocalDate(value) : today();
 
-const assertNotInFuture = (date: Date): void => {
+export const assertNotInFuture = (date: Date): void => {
   if (date.getTime() > today().getTime()) {
     throw httpError(
       STATUS_CODE.UNPROCESSABLE_ENTITY,
@@ -71,7 +71,7 @@ const assertNotInFuture = (date: Date): void => {
   }
 };
 
-const assertMonotonic = async (
+export const assertMonotonic = async (
   vehicle: VehicleDocument,
   km: number,
   date: Date,

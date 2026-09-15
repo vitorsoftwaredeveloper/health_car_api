@@ -6,6 +6,7 @@ import { alertRepository } from "../../repositories/alert.repository";
 import { attachmentRepository } from "../../repositories/attachment.repository";
 import { maintenanceEventRepository } from "../../repositories/maintenanceEvent.repository";
 import { notificationRepository } from "../../repositories/notification.repository";
+import { fuelEntryRepository } from "../../repositories/fuelEntry.repository";
 import { odometerReadingRepository } from "../../repositories/odometerReading.repository";
 import { planItemRepository } from "../../repositories/planItem.repository";
 import { userRepository } from "../../repositories/user.repository";
@@ -55,7 +56,7 @@ export const exportAccountData = async (
   const account = await loadAccount(requester);
   const scope = { accountId: requester.accountId };
 
-  const [users, vehicles, planItems, readings, events, attachments, alerts] =
+  const [users, vehicles, planItems, readings, events, attachments, alerts, fuelEntries] =
     await Promise.all([
       userRepository.find(scope) as Promise<UserDocument[]>,
       vehicleRepository.find(scope) as Promise<VehicleDocument[]>,
@@ -64,6 +65,7 @@ export const exportAccountData = async (
       maintenanceEventRepository.find(scope, null, { sort: { date: -1 } }),
       attachmentRepository.find(scope),
       alertRepository.find(scope, null, { sort: { createdAt: -1 } }),
+      fuelEntryRepository.find(scope, null, { sort: { date: -1 } }),
     ]);
 
   return {
@@ -111,6 +113,7 @@ export const exportAccountData = async (
     ),
     planItems,
     odometerReadings: readings,
+    fuelEntries,
     maintenanceEvents: events,
     attachments,
     alerts,

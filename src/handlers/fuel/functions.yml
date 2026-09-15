@@ -1,0 +1,29 @@
+createFuelEntry:
+  handler: src/handlers/fuel/createEntry.execute
+  description: Registra abastecimento, cria a leitura de odômetro e devolve o consumo
+  events:
+    - httpApi:
+        method: POST
+        path: /v1/vehicles/{vehicleId}/fuel
+        authorizer:
+          name: cognitoJwt
+
+listFuelEntries:
+  handler: src/handlers/fuel/listEntries.execute
+  description: Abastecimentos paginados com km/l e resumo de consumo
+  events:
+    - httpApi:
+        method: GET
+        path: /v1/vehicles/{vehicleId}/fuel
+        authorizer:
+          name: cognitoJwt
+
+deleteFuelEntry:
+  handler: src/handlers/fuel/deleteEntry.execute
+  description: Apaga um abastecimento e a leitura de odômetro que ele criou
+  events:
+    - httpApi:
+        method: DELETE
+        path: /v1/vehicles/{vehicleId}/fuel/{entryId}
+        authorizer:
+          name: cognitoJwt

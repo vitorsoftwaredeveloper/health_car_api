@@ -16,6 +16,9 @@ jest.mock("../../src/repositories/account.repository", () => ({
 jest.mock("../../src/repositories/odometerReading.repository", () => ({
   odometerReadingRepository: { insertOne: jest.fn(), deleteMany: jest.fn() },
 }));
+jest.mock("../../src/repositories/fuelEntry.repository", () => ({
+  fuelEntryRepository: { deleteMany: jest.fn(async () => ({ deletedCount: 6 })) },
+}));
 jest.mock("../../src/repositories/planItem.repository", () => ({
   planItemRepository: { deleteMany: jest.fn() },
 }));
@@ -346,6 +349,7 @@ describe("deleteVehicle", () => {
     expect(result).toMatchObject({
       planItemsRemoved: 44,
       odometerReadingsRemoved: 7,
+      fuelEntriesRemoved: 6,
       alertsRemoved: 3,
       notificationsRemoved: 2,
     });

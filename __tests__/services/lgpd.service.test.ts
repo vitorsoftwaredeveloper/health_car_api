@@ -15,6 +15,9 @@ jest.mock("../../src/repositories/planItem.repository", () => ({
 jest.mock("../../src/repositories/odometerReading.repository", () => ({
   odometerReadingRepository: { find: jest.fn(), count: jest.fn() },
 }));
+jest.mock("../../src/repositories/fuelEntry.repository", () => ({
+  fuelEntryRepository: { find: jest.fn(async () => []) },
+}));
 jest.mock("../../src/repositories/maintenanceEvent.repository", () => ({
   maintenanceEventRepository: { find: jest.fn(), count: jest.fn() },
 }));

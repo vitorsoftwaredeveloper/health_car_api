@@ -6,6 +6,7 @@ import { catalogItemRepository } from "../../src/repositories/catalogItem.reposi
 import { diagnosticChecklistRepository } from "../../src/repositories/diagnosticChecklist.repository";
 import { diagnosticCodeRepository } from "../../src/repositories/diagnosticCode.repository";
 import { diagnosticSessionRepository } from "../../src/repositories/diagnosticSession.repository";
+import { fuelEntryRepository } from "../../src/repositories/fuelEntry.repository";
 import { maintenanceEventRepository } from "../../src/repositories/maintenanceEvent.repository";
 import { notificationRepository } from "../../src/repositories/notification.repository";
 import { odometerReadingRepository } from "../../src/repositories/odometerReading.repository";
@@ -25,6 +26,7 @@ const repositories = [
   diagnosticChecklistRepository,
   diagnosticCodeRepository,
   diagnosticSessionRepository,
+  fuelEntryRepository,
   maintenanceEventRepository,
   notificationRepository,
   odometerReadingRepository,

@@ -18,6 +18,7 @@ import {
 } from "../../utils/errors";
 import { withTransaction } from "../../libs/mongo";
 import { parseLocalDate, today } from "../../utils/date";
+import { fuelEntryRepository } from "../../repositories/fuelEntry.repository";
 import { odometerReadingRepository } from "../../repositories/odometerReading.repository";
 import { alertRepository } from "../../repositories/alert.repository";
 import { attachmentRepository } from "../../repositories/attachment.repository";
@@ -302,6 +303,7 @@ export const updateVehicle = async (
 export interface DeleteVehicleResult {
   planItemsRemoved: number;
   odometerReadingsRemoved: number;
+  fuelEntriesRemoved: number;
   alertsRemoved: number;
   notificationsRemoved: number;
   eventsScheduledForPurge: number;
@@ -321,6 +323,7 @@ export const deleteVehicle = async (
 
     const planItems = await planItemRepository.deleteMany(scope, { session });
     const readings = await odometerReadingRepository.deleteMany(scope, { session });
+    const fuelEntries = await fuelEntryRepository.deleteMany(scope, { session });
     const alerts = await alertRepository.deleteMany(scope, { session });
     const notifications = await notificationRepository.deleteMany(scope, {
       session,
@@ -342,6 +345,7 @@ export const deleteVehicle = async (
     return {
       planItemsRemoved: planItems.deletedCount ?? 0,
       odometerReadingsRemoved: readings.deletedCount ?? 0,
+      fuelEntriesRemoved: fuelEntries.deletedCount ?? 0,
       alertsRemoved: alerts.deletedCount ?? 0,
       notificationsRemoved: notifications.deletedCount ?? 0,
       eventsScheduledForPurge: events.modifiedCount ?? 0,
